@@ -1,0 +1,50 @@
+(*DAQI 2019 Data Cleaning*)
+(*Initially produced by Shaun Gaze*)
+(*Updated to be readable without a Wolfram Mathematica environment, 
+clarifying comments and splitting the code into seperate files for 2019 and 2020 data by myself (Victoria Walls)*)
+
+(*Initializing Directories*)
+
+SetDirectory[FileNameJoin[{NotebookDirectory[],"DataDir"}]] (*Sets the directory as an initialization cell so that it doesn't need to be set again*)
+TableForm@FileNames[]
+
+(*Cleaning 2019 Dataset*)
+
+(*Importing the 2019 data*)
+data2019 = Import["AQ_Index_2019.csv",{"CSV","Data"}]; 
+
+(*Visualising the Data*)
+data2019[[1;;5]] // TableForm (*Displays first 5 rows*)
+data2019[[-5;;-1]] // TableForm (*Displaying final 5 rows*)
+
+(*Looking at the first 5 and remaining 5 elements of the dataset (mimicking //Short essentially) The first row, and the final 2 rows have to go*)
+
+data2019cleaningV1 = data2019[[2;;-3]] (*Obtaining the required result specified as above*)
+InputForm/@data2019cleaningV1[[2]] (*Checking the input form shows there is an empty string at the end of the row, similar for all rows*)
+
+(*Removing Column of empty values*)
+data2019cleaningV2 = Table[DeleteCases[data2019cleaningV1[[k]],""],{k,1,Length[data2019cleaningV1]}];
+
+key2019 = ToString/@data2019cleaningV1[[1]] (*Takes all of the headings from row 1 to form the Keys of our Dataset*)
+
+(*There was small issues when investigating the dates as Mathematica misinterpreted them, so re-formatting to DD/MM/YYYY:*)
+
+dateswitch2019v1 = data2019cleaningV2[[2;;,1]]; (*Takes the date column only*)
+dateswitch2019v2=(DateObject[{#,{"Day","/","Month","/", "Year"}}, "Day"] & /@ dateswitch2019v1); (*Creates a date object now in the form DD/MM/YYYY*)
+data2019cleaningV2[[2;;,1]] = dateswitch2019v2; (*Sets the original date column to the new reformatted one*)
+data2019cleaningV2[[2;;]] // Dataset; (*Shows that the date values have been converted correctly*)
+
+(*Since the data has now been pre-processed, it is necessary to create a Dataset to store all of the values:*)
+
+data2019cleaningV3 = Dataset @ (AssociationThread[key2019,#]&/@ data2019cleaningV2[[2;;]]); (*Almost Final Form of the dataset*)
+
+(*It was later decided to not include Northern Ireland since the Monitoring Stations proved infeasible, thus the final clean data set is as follows:*)
+
+Keys[data2019Clean][[1,1;;]]
+data2019Clean = KeyDrop[data2019cleaningV3,{"Northern Ireland", "North Wales", "South Wales", "Belfast Metropolitan Urban Area","Swansea Urban Area", "Cardiff Urban Area"}] (*Cleaned DS*)
+Export["AQ_Cleaned_2019.csv", data2019Clean,"CSV"] (*All that is left is to Export the data*)
+
+(*Dimensions before and after the pre-processing*)
+
+Column@{Directory[],TableForm@FileNames[]} (*Has the directory and file contents*)
+List[Dimensions[data2019Clean], Dimensions[data2019]] (*Can see that the 2019 data had 369 rows with various column lengths on their rows*)
