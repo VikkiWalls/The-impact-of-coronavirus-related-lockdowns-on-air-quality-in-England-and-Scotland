@@ -1,0 +1,50 @@
+(*DAQI 2020 Data Cleaning*)
+(*Initially produced by Shaun Gaze*)
+(*Updated to be readable without a Wolfram Mathematica environment, 
+clarifying comments and splitting the code into seperate files for 2019 and 2020 data by myself (Victoria Walls)*)
+
+(*Initializing Directories*)
+
+SetDirectory[FileNameJoin[{NotebookDirectory[],"DataDir"}]] (*Sets the directory as an initialization cell so that it doesn't need to be set again*)
+TableForm@FileNames[]
+
+(*Cleaning 2020 Dataset*)
+
+(*Importing the 2020 Data*)
+data2020 = Import["AQ_Index_2020.csv",{"CSV","Data"}];
+
+(*Visualising the start and end of the dataset*)
+data2020[[1;;5]] // TableForm
+data2020[[-5;;-1]] // TableForm
+
+(*Removing unnessecary rows*)
+data2020cleaningV1 = data2020[[2;;-3]] (*Obtaining the required result specified as above*)
+
+(*Viewing input form reveals a column of empty values*)
+InputForm/@data2020cleaningV1[[2]]
+
+(*Removing empty values*)
+data2020cleaningV2 = Table[DeleteCases[data2020cleaningV1[[k]],""],{k,1,Length[data2020cleaningV1]}];
+
+(*Creating a list of keys for the dataset*)
+key2020 = ToString/@data2020cleaningV1[[1]]
+
+(*Re formatting the date values:
+Creating a new object with the correctly formatted dates and then replacing the original date column with the new object*)
+dateswitch2020v1 = data2020cleaningV2[[2;;,1]];
+dateswitch2020v2=(DateObject[{#,{"Day","/","Month","/", "Year"}}, "Day"] & /@ dateswitch2020v1);
+data2020cleaningV2[[2;;,1]] = dateswitch2020v2;
+
+(*Creating new dataset to store cleaned values*)
+data2020cleaningV3 = Dataset @ (AssociationThread[key2019,#]&/@ data2020cleaningV2[[2;;]]);
+
+(*Removing unnessecary data for Northern Ireland*)
+data2020Clean = KeyDrop[data2020cleaningV3,{"Northern Ireland", "North Wales", "South Wales", "Belfast Metropolitan Urban Area","Swansea Urban Area", "Cardiff Urban Area"}]
+
+(*Exporting clean data to a new CSV*)
+Export["AQ_Cleaned_2020.csv", data2020Clean,"CSV"]
+
+(*Dimensions before and after the pre-processing*)
+
+Column@{Directory[],TableForm@FileNames[]} (*Has the directory and file contents*)
+List[Dimensions[data2020Clean], Dimensions[data2020]] (*Like the 2019 dataset this had 370 rows and variable column lengths*)
