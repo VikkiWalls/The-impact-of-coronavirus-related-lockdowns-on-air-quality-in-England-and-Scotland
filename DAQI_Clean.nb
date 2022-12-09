@@ -1,5 +1,6 @@
 (*DAQI Data Cleaning*)
 (*Initially produced by Shaun Gaze*)
+(*Updated to be readable without a Wolfram Mathematica environment and clarifying comments by myself (Victoria Walls)*)
 
 (*Initializing Directories*)
 
@@ -8,7 +9,10 @@ TableForm@FileNames[]
 
 (*Cleaning 2019 Dataset*)
 
-data2019 = Import["AQ_Index_2019.csv",{"CSV","Data"}]; (*Importing the data from the CSV file*)
+(*Importing the 2019 data*)
+data2019 = Import["AQ_Index_2019.csv",{"CSV","Data"}]; 
+
+(*Visualising the Data*)
 data2019[[1;;5]] // TableForm (*Displays first 5 rows*)
 data2019[[-5;;-1]] // TableForm (*Displaying final 5 rows*)
 
@@ -16,7 +20,10 @@ data2019[[-5;;-1]] // TableForm (*Displaying final 5 rows*)
 
 data2019cleaningV1 = data2019[[2;;-3]] (*Obtaining the required result specified as above*)
 InputForm/@data2019cleaningV1[[2]] (*Checking the input form shows there is an empty string at the end of the row, similar for all rows*)
-data2019cleaningV2 = Table[DeleteCases[data2019cleaningV1[[k]],""],{k,1,Length[data2019cleaningV1]}];(*Removing Column of *)
+
+(*Removing Column of empty values*)
+data2019cleaningV2 = Table[DeleteCases[data2019cleaningV1[[k]],""],{k,1,Length[data2019cleaningV1]}];
+
 key2019 = ToString/@data2019cleaningV1[[1]] (*Takes all of the headings from row 1 to form the Keys of our Dataset*)
 
 (*There was small issues when investigating the dates as Mathematica misinterpreted them, so re-formatting to DD/MM/YYYY:*)
@@ -38,19 +45,38 @@ Export["AQ_Cleaned_2019.csv", data2019Clean,"CSV"] (*All that is left is to Expo
 
 (*Cleaning 2020 Dataset*)
 
+(*Importing the 2020 Data*)
 data2020 = Import["AQ_Index_2020.csv",{"CSV","Data"}];
+
+(*Visualising the start and end of the dataset*)
 data2020[[1;;5]] // TableForm
 data2020[[-5;;-1]] // TableForm
 
+(*Removing unnessecary rows*)
 data2020cleaningV1 = data2020[[2;;-3]] (*Obtaining the required result specified as above*)
+
+(*Viewing input form reveals a column of empty values*)
 InputForm/@data2020cleaningV1[[2]]
+
+(*Removing empty values*)
 data2020cleaningV2 = Table[DeleteCases[data2020cleaningV1[[k]],""],{k,1,Length[data2020cleaningV1]}];
+
+(*Creating a list of keys for the dataset*)
 key2020 = ToString/@data2020cleaningV1[[1]]
+
+(*Re formatting the date values:
+Creating a new object with the correctly formatted dates and then replacing the original date column with the new object*)
 dateswitch2020v1 = data2020cleaningV2[[2;;,1]];
 dateswitch2020v2=(DateObject[{#,{"Day","/","Month","/", "Year"}}, "Day"] & /@ dateswitch2020v1);
 data2020cleaningV2[[2;;,1]] = dateswitch2020v2;
+
+(*Creating new dataset to store cleaned values*)
 data2020cleaningV3 = Dataset @ (AssociationThread[key2019,#]&/@ data2020cleaningV2[[2;;]]);
+
+(*Removing unnessecary data for Northern Ireland*)
 data2020Clean = KeyDrop[data2020cleaningV3,{"Northern Ireland", "North Wales", "South Wales", "Belfast Metropolitan Urban Area","Swansea Urban Area", "Cardiff Urban Area"}]
+
+(*Exporting clean data to a new CSV*)
 Export["AQ_Cleaned_2020.csv", data2020Clean,"CSV"]
 
 (*Dimensions before and after the pre-processing*)
