@@ -19,8 +19,8 @@ I have also shared both the project version and the published version on [Resear
 
 In the interest of preserving the files I have saved all of them to this repository:
 
-* ### [Published Version]()
-* ### [MSc Project Version]()
+* ### [Published Version](https://github.com/VikkiWalls/The-impact-of-coronavirus-related-lockdowns-on-air-quality-in-England-and-Scotland/blob/main/The%20impact%20of%20coronavirus-related%20lockdowns%20on%20air%20quality%20in%20England%20and%20Scotland.pdf)
+* ### [MSc Project Version](https://github.com/VikkiWalls/The-impact-of-coronavirus-related-lockdowns-on-air-quality-in-England-and-Scotland/blob/main/MSc%20Technical%20Write%20Up.pdf)
 
 _[MSc Project Additional Files and Resources_
 * [DAQI Data](https://uk-air.defra.gov.uk/data/DAQI-regional-data)
