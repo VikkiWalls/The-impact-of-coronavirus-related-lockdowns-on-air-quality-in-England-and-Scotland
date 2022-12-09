@@ -1,0 +1,605 @@
+(*England Particulate Matter Daily Mean Concentration*)
+(*Initially produced by Nicole Gould*)
+
+
+NotebookDirectory[]
+SetDirectory[FileNameJoin[{NotebookDirectory[],"DataDir"}]]
+
+(*Import the list of England Sites to be used for our analysis. We will only use sites that have a complete dataset for PM10 and PM2.5, as well as values for 2019 and 2020*)
+
+(*This variable can be used for both 2019 and 2020 so does not need a year indicator*)
+engSites=Import["filtered.xlsx",{"Data",1,2;;,{1,2}}];
+engSites//Dimensions
+
+(*Take the Intersection of the sites listed in Column 1 (2019) and the sites listed in Column 2 (2020) in order to determine which sites appear in both years*)
+intersectingEngSites=Intersection[engSites[[All,1]],engSites[[All,2]]]
+
+(*Determine the number of sites that will be included in our dataset for England by using Length*)
+intersectingEngSites//Length
+
+(*England Particulate Matter Mean Concentration for 2019*)
+
+(*Import England Sites 2019 Excel*)
+(*When importing this spreadsheet, remove the last 5 rows*)
+england19=Import["England Sites 2019.xlsx",{"Data",1,4;;-5}]
+
+(*Determine the dimensions of our spreadsheet*)
+england19//Dimensions
+
+(*Transpose the values of the spreadsheet, so the site names are listed in one single column and the date is listed in rows*)
+england19trans=england19//Transpose
+
+(*Reconfirm the dimensions and length after performing the transpose*)
+england19trans//Dimensions
+
+(*Request a small snippet of the dataset in Grid form to ensure this is how we want the data to look after the Transpose*)
+england19trans[[1;;6,1;;5]]//Grid
+
+(*Reconfirm the length of the variable*)
+england19trans[[2]]//Length
+
+(*Remove "Status" rows.*)
+
+(*Retrieve the positions for England sites which contain data for PM10*)
+eng19PM10=Position[england19trans,"PM10 particulate matter (Hourly measured)"]
+
+(*Transpose the data in order to have all of the rows together and all of the columns together*)
+eng19PM10trans=eng19PM10//Transpose
+
+(*Request the positions for the rows only*)
+eng19PM10trans[[1]]
+
+(*Confirm the length of the rows - this should match the number of sites*)
+Length[eng19PM10trans[[1]]]
+
+(*Repeat the same steps above to retrieve the positions for England sites which contain data for PM2.5*)
+eng19PM25=Position[england19trans,"PM2.5 particulate matter (Hourly measured)"]
+
+(*Transpose the data in order to have all of the rows together and all of the columns together*)
+eng19PM25Trans=eng19PM25//Transpose
+
+(*Request the positions for the rows only*)
+eng19PM25Trans[[1]]
+
+(*Confirm the length of the rows - this should match the number of sites*)
+eng19PM25Trans[[1]]//Length
+
+(*Join the positions for the PM2.5 and PM10 rows. Sorting them will ensure they are ordered by Site*)
+PMAlleng19=Join[eng19PM10trans[[1]],eng19PM25Trans[[1]]]//Sort
+
+(*Join the Date/Time data with the site and pollutant information and store in a new variable*)
+england19nostatus=Join[england19trans[[1;;2]],england19trans[[PMAlleng19]]]
+
+(*Confirm the dimensions of new variable*)
+england19nostatus//Dimensions
+
+(*Check a small output of our new variable in Grid form*)
+england19nostatus[[1;;10,1;;5]]//Grid
+
+(*Turn Hourly Measurements into Daily Values by Averaging Results*)
+
+england19Clean=england19nostatus;
+
+(* Get the means of everything (not separated into PM type)*)
+
+(*Calculate the mean of everything for 2019 - NOT separate by PM*)
+eng19dat=england19Clean[[3;;,3;;]]//Transpose
+
+(*Checking the result for one site*)
+eng19dat[[1;;,1]];
+
+(*Partition the defined variable by 24 so we can calculate the mean per day*)
+eng19part=N@(Mean/@(Partition[eng19dat,24]))
+
+(*Reconfirm the dimensions for the variable*)
+eng19part//Dimensions
+
+(*Transpose the variable*)
+eng19part=eng19part//Transpose
+
+(*Reconfirm the dimensions*)
+eng19part//Dimensions
+
+(*Check if there's a missing data*)
+eng19part[[1]];
+
+(*Replace any values that have No date with 0 *)
+eng19DailyMean=eng19part/.("No data":>0)
+
+(*ensure all sites do not have more than 180 days of missing data*)
+0/. (Counts/@eng19DailyMean)
+
+(*Check the dimension of the daily mean data*)
+eng19DailyMean//Dimensions
+
+(*- Visualise all PM data from 2019 for England in a table*)
+
+(*Exclude the heading labels from england19Clean*)
+england19CleanTEMP=england19Clean[[3;;,1;;2]];
+
+(*Join the site names and PM types columns WITH the daily mean values*)
+eng19joinedTab=Partition[Flatten@Table[{england19CleanTEMP[[row,1;;2]],eng19DailyMean[[row]]},{row,1,Length[eng19DailyMean]}],367];
+
+(*Confirm the dimensions of the new variable*)
+eng19joinedTab//Dimensions
+
+(*Create a new heading labels {Site, Particulate Matter, 365 Dates *)
+eng19dateObject=england19Clean[[1,3;;]]//DeleteDuplicates;
+
+(*Confirm the dimensions for the datObject variable reflects the number of days in the year*)
+eng19dateObject//Dimensions
+
+(*Create a heading with Site and Particulate Matter*)
+heading={"Site","Particulate Matter"};
+
+(*Join the previously created heading with the dateObject*)
+eng19heading=Join[heading,eng19dateObject];
+
+(*Confirm the length of the new heading*)
+eng19heading//Length
+
+(*Join the two tables that were previously created - eng19JoinedTab and eng19heading*)
+eng19dailyMeanTable=Prepend[eng19joinedTab,eng19heading];
+
+(*Confirm the dimensions for the final table*)
+eng19dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+eng19dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table*)
+Export["England 19 Particulate Matter (Both) - Daily Mean Concentration.xlsx",eng19dailyMeanTable]
+
+(*Get the means of just PM10 at England Sites in 2019*)
+
+(*Retrieve the positions for England sites which contain data for PM10 and Transpose the data so it is separated into rows and columns*)
+CleanedEng19PM10Rows=Position[england19Clean,"PM10 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+CleanedEng19PM10Rows[[1]]
+eng19PM10dat=england19Clean[[CleanedEng19PM10Rows[[1]],3;;]]//Transpose
+
+(*Reconfirm the dimensions*)
+eng19PM10dat//Dimensions
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+eng19PM10part=N@(Mean/@(Partition[eng19PM10dat,24]))
+
+(*Calculate the dimensions for the daily mean - it should be the number of days in a year by number of sites*)
+eng19PM10part//Dimensions
+
+(*Transpose the data and set the variable to itself*)
+eng19PM10part=eng19PM10part//Transpose;
+
+(*Reconfirm the dimensions after the transpose*)
+eng19PM10part//Dimensions
+
+(*Replace any cells containing 'No data' with 0 *)
+eng19PM10DailyMean=eng19PM10part/.("No data":>0);
+
+(*Confirm the dimensions have not changed*)
+eng19PM10DailyMean//Dimensions
+
+(*- Visualise England data for PM10 from 2019 in a table*)
+
+(*1. Excluding the heading labels from england19Clean, join the site names and PM types columns WITH the daily mean values*)
+(*Retrieve only the PM10 rows with only the site and PM type columns*)
+england19CleanPM10TEMP=england19Clean[[CleanedEng19PM10Rows[[1]],1;;2]];
+
+(*Join the previously created heading for PM10 with the dateObject*)
+eng19PM10joinedTab=Partition[Flatten@Table[{england19CleanPM10TEMP[[row,1;;2]],eng19PM10DailyMean[[row]]},{row,1,Length[eng19PM10DailyMean]}],367];
+
+(*Confirm the length of the new heading*)
+eng19PM10joinedTab//Dimensions
+
+(*Join the two tables that were previously created - eng19PM10joinedTab and eng19heading*)
+eng19PM10dailyMeanTable=Prepend[eng19PM10joinedTab,eng19heading];
+
+(*Confirm the dimensions for the final Daily Mean Table for PM10 from 2019*)
+eng19PM10dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+eng19PM10dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table for PM10 in 2019*)
+Export["England 19 Particulate Matter (PM10) - Daily Mean Concentration.xlsx",eng19PM10dailyMeanTable]
+
+(*Get the means of just PM2.5 at England Sites in 2019*)
+
+(*Retrieve the positions for England sites which contain data for PM2.5 from 2020 and Transpose the data so it is separated into rows and columns*)
+CleanedEng19PM25Rows=Position[england19Clean,"PM2.5 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+CleanedEng19PM25Rows[[1]]
+eng19PM25dat=england19Clean[[CleanedEng19PM25Rows[[1]],3;;]]//Transpose;
+
+(*Reconfirm the dimensions*)
+eng19PM25dat//Dimensions
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+eng19PM25part=N@(Mean/@(Partition[eng19PM25dat,24]))
+
+(*Reconfirm the dimensions to ensure we have the appropriate number of means to sites*)
+eng19PM25part//Dimensions
+
+(*Transpose the variable and set it equal to itself*)
+eng19PM25part=eng19PM25part//Transpose;
+
+(*Check the dimensions after the transpose to confirm the transpose was successful*)
+eng19PM25part//Dimensions
+
+(*Replace any cells that contain the value No data with 0*)
+eng19PM25DailyMean=eng19PM25part/.("No data":>0);
+
+(*Reconfirm the dimensions*)
+eng19PM25DailyMean//Dimensions
+
+(*Visualise England data for PM2.5 from 2019 in a table*)
+
+(*1. Excluding the heading labels from england19Clean, join the site names and PM types columns WITH the daily mean values*)
+(*NOTE! Here we use PM10 rows because site names are in the same row as PM10 values in the original table*)
+eng19PM25col1=england19Clean[[CleanedEng19PM10Rows[[1]],1]];
+
+(*Here we only get the PM2.5 columns*)
+eng19PM25col2=england19Clean[[CleanedEng19PM25Rows[[1]],2]];
+
+(*Join the two newly created columns with the Daily Mean*)
+england19CleanPM25TEMP=Partition[Flatten@Table[{eng19PM25col1[[row2]],eng19PM25col2[[row2]]},{row2,1,Length[eng19PM25col1]}],2];
+eng19PM25joinedTab=Partition[Flatten@Table[{england19CleanPM25TEMP[[row,1;;2]],eng19PM25DailyMean[[row]]},{row,1,Length[eng19PM25DailyMean]}],367];
+
+(*Confirm the length of the new heading*)
+eng19PM25joinedTab//Dimensions
+
+(*Join the two tables that were previously created - eng19PM25joinedTab and eng19heading*)
+eng19PM25dailyMeanTable=Prepend[eng19PM25joinedTab,eng19heading];
+
+(*Confirm the dimensions for the final Daily Mean Table for PM2.5 from 2019*)
+eng19PM25dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+eng19PM25dailyMeanTable[[1;;2,1;;10]]//Grid
+Export["England 19 Particulate Matter (PM2.5) - Daily Mean Concentration.xlsx",eng19PM25dailyMeanTable]
+
+(*Find latitude, longitude, region and environment type*)
+(*- Get geolocations of each sites*)
+
+(*First, check the dimensions of the full 2019 clean dataset*)
+england19Clean//Dimensions
+
+(*Retrieve the Site Names for all of the sites being compared in England*)
+eng19sitenames=england19Clean[[CleanedEng19PM10Rows[[1]],1]]
+
+(*Check the length of the site names to ensure it matches the number of sites we have been analysing*)
+eng19sitenames//Length
+
+(*Find the geolocation for each site*)
+england19geo=FindGeoLocation/@eng19sitenames
+
+(*Determine the Head of the missing expressions*)
+england19geo[[9]]//Head
+
+(*Using this detail, find the position of all sites that do not have a GeoLocation*)
+eng19missingpositions=Position[england19geo,Missing]//Transpose
+
+(*Pull the first value from the variable eng19missingpositions in order to determine the positions of sites with the missing variable*)
+eng19missingpositions[[1]]
+
+(*Using ReplacePart, update the GeoPosition for all sites that did not previously have coordinates listed*)
+eng19cleanedgeo=ReplacePart[england19geo,{9->GeoPosition[{51.486884000000, 0.0179010000000}],12->GeoPosition[{51.481478, -0.486675}],13->GeoPosition[{51.479167,-0.440556}],14->GeoPosition[{51.940988,-0.274431}],19->GeoPosition[{51.880154,-0.422144}],24->GeoPosition[{53.577889, -0.633222}],25->GeoPosition[{51.487764,-0.502656}]}]
+
+(*Convert the GeoPosition to LatitudeLongitude for all sites*)
+eng19latlong=LatitudeLongitude/@eng19cleanedgeo
+
+(*- Add Latitude and Longitude to the table*)
+
+(*Transpose the Latitude/Longitude, so each value will be in a separate column*)
+eng19latlongTrans=Transpose[eng19latlong]
+
+(*Confirm the dimensions for the first list (latitude) in the new transposed variable*)
+eng19latlongTrans[[1]]//Dimensions
+
+(*Create a heading for the Latitude values. Then, prepend the Latitude values and header to a new variable*)
+heading= Style["Latitude",{Black,Bold,12}];
+eng19latitude=Prepend[eng19latlongTrans[[1]],heading]
+
+(*Confirm the length of the new variable is now all sites plus the header*)
+eng19latitude//Length
+
+(*Confirm the dimensions for the second list (longitude) in the new transposed variable*)
+eng19latlongTrans[[2]]//Dimensions
+
+(*Create a heading for the Longitude values. Then, prepend the Longitude values and header to a new variable*)
+heading2= Style["Longitude",{Black,Bold,12}];
+eng19longitude=Prepend[eng19latlongTrans[[2]],heading2]
+
+(*Confirm the length of the new variable is now all sites plus the header*)
+eng19longitude//Length
+
+(*- Add Sites to the table*)
+
+(*Create a heading for the Site values. Then, prepend the site values and header to a new variable*)
+heading3= Style["Site",{Black,Bold,12}];
+eng19sites=Prepend[eng19sitenames,heading3]
+
+(*Confirm the length of the new variable is now all sites plus the header*)
+eng19sites//Dimensions
+
+(*- Add Zones to the table*)
+
+(*Import the AQ Regions Excel sheet to obtain the Zone details*)
+AQZones=Import["AQ_Regions.xlsx",{"Sheets","Closest_Zones"}];
+
+(*Pull the zones for England from this sheet and assign to a new variable*)
+EngAQZones=AQZones[[12;;41,1]]
+
+(*Confirm the dimensions of this variable is equal to the number of sites*)
+EngAQZones//Dimensions
+
+(*Create a heading for the Zone values. Then, prepend the zone values and header to a new variable*)
+heading4=Style["Zone",{Black,Bold,12}];
+CompleteAQZones=Prepend[EngAQZones,heading4]
+
+(*- Add Environment Type to the table*)
+
+(*Import the AQ Regions Excel sheet to obtain the Environment details*)
+AQEnvironmentType=Import["AQ_Regions.xlsx",{"Sheets","Closest_Site"}];
+
+(*Pull the Environment Types for England from this sheet and assign to a new variable*)
+EngAQET=AQEnvironmentType[[12;;41,1]]
+
+(*Confirm the dimensions of this variable is equal to the number of sites*)
+EngAQET//Dimensions
+
+(*Create a heading for the Environment Type values. Then, prepend the Environment Type values and header to a new variable*)
+heading5=Style["Environment Type",{Black,Bold,12}];
+CompleteAQET=Prepend[EngAQET,heading5]
+
+(*Create a Grid to display the Latitude, Longitude, Site Name, Zone and Environment Type using the variables that were defined in the previous steps*)
+eng19holdValue=Grid[Transpose@Partition[Flatten@Table[{eng19latitude, eng19longitude, eng19sites, CompleteAQZones,CompleteAQET},1],31], Frame->All]
+
+(*England Particulate Matter Mean Concentration for 2020*)
+
+(*Import England Sites 2020 Excel*)
+
+(*When importing this spreadsheet, remove the last 5 rows*)
+england20=Import["England Sites 2020.xlsx",{"Data",1,4;;-5}]
+
+(*Determine the dimensions of our spreadsheet*)
+england20//Dimensions
+
+(*Transpose the values of the spreadsheet, so the site names are listed in one single column and the date is listed in rows*)
+england20trans=england20//Transpose
+
+(*Reconfirm the dimensions and length after performing the transpose*)
+england20trans//Dimensions
+
+(*Request a small snippet of the dataset in Grid form to ensure this is how we want the data to look after the Transpose*)
+england20trans[[1;;6,1;;5]]//Grid
+
+(*Reconfirm the length of the variable*)
+england20trans[[2]]//Length
+
+(*Remove "Status" rows.*)
+
+(*Retrieve the positions for England sites which contain data for PM10*)
+eng20PM10=Position[england20trans,"PM10 particulate matter (Hourly measured)"]
+
+(*Transpose the data in order to have all of the rows together and all of the columns together*)
+eng20PM10trans=eng20PM10//Transpose
+
+(*Request the positions for the rows only*)
+eng20PM10trans[[1]]
+
+(*Confirm the length of the rows - this should match the number of sites*)
+eng20PM10trans[[1]]//Length
+
+(*Repeat the same steps above to retrieve the positions for England sites which contain data for PM2.5*)
+eng20PM25=Position[england20trans,"PM2.5 particulate matter (Hourly measured)"]
+
+(*Transpose the data in order to have all of the rows together and all of the columns together*)
+eng20PM25Trans=eng20PM25//Transpose
+
+(*Request the positions for the rows only*)
+eng20PM25Trans[[1]]
+
+(*Confirm the length of the rows - this should match the number of sites*)
+eng20PM25Trans[[1]]//Length
+
+(*Join the positions for the PM2.5 and PM10 rows. Sorting them will ensure they are ordered by Site*)
+PMAlleng20=Join[eng20PM10trans[[1]],eng20PM25Trans[[1]]]//Sort
+
+(*Join the Date/Time data with the site and pollutant information and store in a new variable*)
+england20nostatus=Join[england20trans[[1;;2]],england20trans[[PMAlleng20]]]
+
+(*Confirm the dimensions of new variable*)
+england20nostatus//Dimensions
+
+(*Check a small output of our new variable in Grid form*)
+england20nostatus[[1;;10,1;;5]]//Grid
+
+(*Turn Hourly Measurements into Daily Values by Averaging Results*)
+
+england20Clean=england20nostatus;
+
+(*- Getting the means of everything (not separated into PM)*)
+
+(*Calculate the mean of everything for 2020 - NOT separate by PM*)
+eng20dat=england20Clean[[3;;,3;;]]//Transpose
+
+(*Checking the result for one site*)
+eng20dat[[1;;,1]];
+
+(*Partition the defined variable by 24 so we can calculate the mean per day*)
+eng20part=N@(Mean/@(Partition[eng20dat,24]))
+
+(*Reconfirm the dimensions for the variable*)
+eng20part//Dimensions
+
+(*Transpose the variable*)
+eng20part=eng20part//Transpose
+
+(*Reconfirm the dimensions*)
+eng20part//Dimensions
+
+(*Check if there's a missing data*)
+eng20part[[1]];
+
+(*Replace any values that have No date with 0 *)
+eng20DailyMean=eng20part/.("No data":>0)
+
+(*ensuring all sites do not have more than 180 days missing data*)
+0/. (Counts/@eng20DailyMean)
+
+(*Check the dimension of the daily mean data*)
+eng20DailyMean//Dimensions
+
+(*- Visualising all PM data from 2020 for England in a table*)
+
+(*Exclude the heading labels from england19Clean*)
+england20CleanTEMP=england20Clean[[3;;,1;;2]];
+
+(*Join the site names and PM types columns WITH the daily mean values*)
+eng20joinedTab=Partition[Flatten@Table[{england20CleanTEMP[[row,1;;2]],eng20DailyMean[[row]]},{row,1,Length[eng20DailyMean]}],368];
+
+(*Confirm the dimensions of the new variable*)
+eng20joinedTab//Dimensions
+
+(*Create a new heading labels {Site, Particulate Matter, 365 Dates *)
+eng20dateObject=england20Clean[[1,3;;]]//DeleteDuplicates;
+
+(*Confirm the dimensions for the datObject variable reflects the number of days in the year*)
+eng20dateObject//Dimensions
+
+(*Create a heading with Site and Particulate Matter*)
+heading={"Site","Particulate Matter"};
+
+(*Join the previously created heading with the dateObject*)
+eng20heading=Join[heading,eng20dateObject];
+
+(*Confirm the length of the new heading*)
+eng20heading//Length
+
+(*Join the two tables that were previously created - eng20JoinedTab and eng20heading*)
+eng20dailyMeanTable=Prepend[eng20joinedTab,eng20heading];
+
+(*Confirm the dimensions for the final table*)
+eng20dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+eng20dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table*)
+Export["England 20 Particulate Matter (Both) - Daily Mean Concentration.xlsx",eng20dailyMeanTable]
+
+(*- Getting the means of just PM10*)
+
+(*Retrieve the positions for England sites which contain data for PM10 and Transpose the data so it is separated into rows and columns*)
+CleanedEng20PM10Rows=Position[england20Clean,"PM10 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+CleanedEng20PM10Rows[[1]]
+eng20PM10dat=england20Clean[[CleanedEng20PM10Rows[[1]],3;;]]//Transpose;
+
+(*Reconfirm the dimensions*)
+eng20PM10dat//Dimensions
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+eng20PM10part=N@(Mean/@(Partition[eng20PM10dat,24]))
+
+(*Calculate the dimensions for the daily mean - it should be the number of days in a year by number of sites*)
+eng20PM10part//Dimensions
+
+(*Transpose the data and set the variable to itself*)
+eng20PM10part=eng20PM10part//Transpose;
+
+(*Reconfirm the dimensions after the transpose*)
+eng20PM10part//Dimensions
+
+(*Replace any cells containing 'No data' with 0 *)
+eng20PM10DailyMean=eng20PM10part/.("No data":>0);
+
+(*Confirm the dimensions have not changed*)
+eng20PM10DailyMean//Dimensions
+
+(*- Visualising England data for PM10 from 2020 in a table*)
+
+(*1. Excluding the heading labels from england20Clean, join the site names and PM types columns WITH the daily mean values*)
+(*Retrieve only the PM10 rows with only the site and PM type columns*)
+england20PM10CleanTEMP=england20Clean[[CleanedEng20PM10Rows[[1]],1;;2]];
+
+(*Join the previously created heading for PM10 with the dateObject*)
+eng20PM10joinedTab=Partition[Flatten@Table[{england20PM10CleanTEMP[[row,1;;2]],eng20PM10DailyMean[[row]]},{row,1,Length[eng20PM10DailyMean]}],368];
+
+(*Confirm the length of the new heading*)
+eng20PM10joinedTab//Dimensions
+
+(*Join the two tables that were previously created - eng20PM10joinedTab and eng20heading*)
+eng20PM10dailyMeanTable=Prepend[eng20PM10joinedTab,eng20heading];
+
+(*Confirm the dimensions for the final Daily Mean Table for PM10 from 2020*)
+eng20PM10dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+eng20PM10dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table for PM10 in 2020*)
+Export["England 20 Particulate Matter (PM10) - Daily Mean Concentration.xlsx",eng20PM10dailyMeanTable]
+
+(*- Getting the means of just PM2.5*)
+
+(*Retrieve the positions for England sites which contain data for PM2.5 from 2020 and Transpose the data so it is separated into rows and columns*)
+CleanedEng20PM25Rows=Position[england20Clean,"PM2.5 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+CleanedEng20PM25Rows[[1]]
+eng20PM25dat=england20Clean[[CleanedEng20PM25Rows[[1]],3;;]]//Transpose;
+
+(*Reconfirm the dimensions*)
+eng20PM25dat//Dimensions
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+eng20PM25part=N@(Mean/@(Partition[eng20PM25dat,24]))
+
+(*Reconfirm the dimensions to ensure we have the appropriate number of means to sites*)
+eng20PM25part//Dimensions
+
+(*Transpose the variable and set it equal to itself*)
+eng20PM25part=eng20PM25part//Transpose;
+
+(*Check the dimensions after the transpose to confirm the transpose was successful*)
+eng20PM25part//Dimensions
+
+(*Replace any cells that contain the value No data with 0*)
+eng20PM25DailyMean=eng20PM25part/.("No data":>0);
+
+(*Reconfirm the dimensions*)
+eng20PM25DailyMean//Dimensions
+
+(*- Visualizing England data for PM2.5 from 2020 in a table*)
+
+(*1. Excluding the heading labels from england20Clean, join the site names and PM types columns WITH the daily mean values*)
+(*NOTE! Here we use PM10 rows because site names are in the same row as PM10 values in the original table*)
+eng20PM25col1=england20Clean[[CleanedEng20PM10Rows[[1]],1]];
+
+(*Here we only get the PM2.5 columns*)
+eng20PM25col2=england20Clean[[CleanedEng20PM25Rows[[1]],2]];
+
+(*Join the two newly created columns with the Daily Mean*)
+england20CleanPM25TEMP=Partition[Flatten@Table[{eng20PM25col1[[row2]],eng20PM25col2[[row2]]},{row2,1,Length[eng20PM25col1]}],2];
+eng20PM25joinedTab=Partition[Flatten@Table[{england20CleanPM25TEMP[[row,1;;2]],eng20PM25DailyMean[[row]]},{row,1,Length[eng20PM25DailyMean]}],368];
+
+(*Confirm the length of the new heading*)
+eng20PM25joinedTab//Dimensions
+
+(*Join the two tables that were previously created - eng20PM25joinedTab and eng20heading*)
+eng20PM25dailyMeanTable=Prepend[eng20PM25joinedTab,eng20heading];
+
+(*Confirm the dimensions for the final Daily Mean Table for PM2.5 from 2020*)
+eng20PM25dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+eng20PM25dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table for PM2.5 in 2020*)
+Export["England 20 Particulate Matter (PM2.5) - Daily Mean Concentration.xlsx",eng20PM25dailyMeanTable]
+
