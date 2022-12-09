@@ -1,0 +1,5 @@
+(*Initializing Directories*)
+SetDirectory[FileNameJoin[{NotebookDirectory[],"DataDir"}]] (*Sets the directory as an initialization cell so that it doesn't need to be set again*)
+TableForm@FileNames[]
+
+(*Cleaning 2019 Dataset*)
