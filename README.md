@@ -10,7 +10,7 @@ In December 2019, the first cases of the Coronavirus (COVID-19) Pandemic occurre
  Based on our analyses, missing data led to an overall statistically insignificant result.
 ***
 This was a group project produced for the "Introduction to Data Science" module of MSc Data Science at the University of Aberdeen.
-Aside from myself, the group consisted of [Shaun Gaze](https://www.linkedin.com/in/shaun-gaze/), [Farisa Dania Zahid](https://www.linkedin.com/in/farisadania/), [Nicole Gould](https://www.linkedin.com/in/nicolegould/) and [Federico Gambedotti](https://www.linkedin.com/in/federicogambedotti/).
+Aside from [myself](https://www.linkedin.com/in/victoriajswalls/), the group consisted of [Shaun Gaze](https://www.linkedin.com/in/shaun-gaze/), [Farisa Dania Zahid](https://www.linkedin.com/in/farisadania/), [Nicole Gould](https://www.linkedin.com/in/nicolegould/) and [Federico Gambedotti](https://www.linkedin.com/in/federicogambedotti/).
 
 As an assessment the group produced code files, a write up and a presentation, and recieved a grade A1, scoring 100%.
 
