@@ -9,6 +9,9 @@ In December 2019, the first cases of the Coronavirus (COVID-19) Pandemic occurre
  It was decided that this would be assessed by comparing air quality data-in particular, PM2.5 and PM10 for 2019 and 2020 across England and Scotland, the results found that air quality levels for these variables did show considerable improvements for individual sites because of lockdowns.
  Based on our analyses, missing data led to an overall statistically insignificant result.
 ***
+This was a group project produced for the "Introduction to Data Science" module of MSc Data Science at the University of Aberdeen.
+Aside from myself, the group consisted of [Shaun Gaze](https://www.linkedin.com/in/shaun-gaze/), [Farisa Dania Zahid](https://www.linkedin.com/in/farisadania/), [Nicole Gould](https://www.linkedin.com/in/nicolegould/) and [Federico Gambedotti](https://www.linkedin.com/in/federicogambedotti/).
+
 As an assessment the group produced code files, a write up and a presentation, and recieved a grade A1, scoring 100%.
 
 After a call for papers email and upon obtaining permission from the rest of the group, I then eddited and submitted the paper to the [Granite Journal](https://www.abdn.ac.uk/pgrs/training-development/granitejournal.php#panel710) where it was peer reviewed and [published](https://www.abdn.ac.uk/pgrs/documents/Granite%20Air%20Quality%20.pdf) on the 29th July 2022 in Volume 7 - "Well-being and Health of People and Places".
@@ -30,5 +33,5 @@ _MSc Project Additional Files and Resources_
 * [Scotland Code](https://github.com/VikkiWalls/The-impact-of-coronavirus-related-lockdowns-on-air-quality-in-England-and-Scotland/blob/main/Scotland_Particulate_Matter_Daily_Mean_Concentration.nb)
 
 ***
-## Citation:
+## Harvard Format Citation:
 Zahid, F.D., Gambedotti, F., Gaze, S., Gould, N. and Walls, V. (2022). The impact of coronavirus-related lockdowns on air quality in England and Scotland. Article Granite Journal, [online] 7(1), pp.1–19. Available at: https://www.abdn.ac.uk/pgrs/documents/Granite%20Air%20Quality%20.pdf
