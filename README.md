@@ -33,5 +33,8 @@ _MSc Project Additional Files and Resources_
 * [Scotland Code](https://github.com/VikkiWalls/The-impact-of-coronavirus-related-lockdowns-on-air-quality-in-England-and-Scotland/blob/main/Scotland_Particulate_Matter_Daily_Mean_Concentration.nb)
 
 ***
+## Goup Member Github Accounts:
+[Nicole Gould](https://github.com/ngould15)
+***
 ## Harvard Format Citation:
 Zahid, F.D., Gambedotti, F., Gaze, S., Gould, N. and Walls, V. (2022). The impact of coronavirus-related lockdowns on air quality in England and Scotland. Article Granite Journal, [online] 7(1), pp.1–19. Available at: https://www.abdn.ac.uk/pgrs/documents/Granite%20Air%20Quality%20.pdf
