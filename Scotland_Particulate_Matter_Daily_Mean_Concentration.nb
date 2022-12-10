@@ -634,3 +634,228 @@ scot20PM25dailyMeanTable[[1;;2,1;;10]]//Grid
 (*Export it into Excel to visualize the entire table for PM2.5 in 2020*)
 Export["Scotland 20 Particulate Matter (PM2.5) - Daily Mean Concentration.xlsx",scot20PM25dailyMeanTable]
 
+(*Graphs *)
+
+(*Temporal visualisation to describe the Daily Average PM10 Reading across all sites in Scotland in 2019*)
+
+Scotdates2019 =scot19PM25dailyMeanTable[[1,3;;]]; (*Creates a list of dates*)
+
+(*Dimensions of daily reading for each site per day*)
+allSitesScot19PM10 = Transpose@scot19PM10DailyMean // Dimensions
+
+(*Average value for every day across all sites*)
+dailyAvgAllSites19ScotPM10 = Mean @ scot19PM10DailyMean;
+
+(*Transpose to create pairs*)
+coordsScot19PM10 = Transpose[{Scotdates2019,dailyAvgAllSites19ScotPM10}];
+
+(*Creating a temporal data object to be able to graph the dates from the PM average reading*)
+tDSS19PM10 = TemporalData[coordsScot19PM10]
+
+(*Setting up the Temporal Plot to visualise the trend*)
+tDLPS2019PM10 = DateListPlot[tDSS19PM10, Frame->False, AxesLabel->{"Month", "PM 10 (ugm-3)"},PlotLabel->Style["Daily Average PM10 Reading in Scotland for year 2019" , Bold], AspectRatio->1/2] 
+
+(*Temporal visualisation to describe the Daily Average PM 2.5 Reading across all sites in Scotland in 2019*)
+
+(*Daily reading for each site per day*)
+allSitesScot19PM25 = Transpose@scot19PM25DailyMean;
+
+(*Average value for every day across all sites*)
+dailyAvgAllSites19ScotPM25 = Mean@ scot19PM25DailyMean;
+
+(*Transpose to create pairs*)
+coordsScot19PM25 = Transpose[{Scotdates2019,dailyAvgAllSites19ScotPM25 }];
+
+(*Creating a temporal data object to be able to graph the dates from the PM average reading*)
+tDSS19PM25 = TemporalData[coordsScot19PM25]
+
+(*Setting up the Temporal Plot to visualise the trend*)
+tDLPS2019PM25 = DateListPlot[tDSS19PM25, Frame->False, AxesLabel->{"Month", "PM 2.5 (ugm-3)"},PlotLabel->Style["Daily Average PM2.5 Reading in Scotland for year 2019" , Bold], AspectRatio->1/2] 
+
+(*Temporal visualisation to describe the Daily Average PM10 Reading across all sites in Scotland in 2020*)
+
+Scotdates2020 =scot20PM25dailyMeanTable[[1,3;;]]; (*Creates a list of dates*)
+Scotdates2020//Dimensions (*As expected*)
+scot20PM10DailyMean  // Dimensions (*Each row is a site with 366 readings, to get the daily reading for all 30 sites, we must transpose*)
+
+(*Daily reading for each site per day*)
+allSitesScot20PM10 = Transpose@scot20PM10DailyMean  
+allSitesScot20PM10 // Dimensions
+
+(*Average value for every day across all sites*)
+dailyAvgAllSites20ScotPM10= Mean @ scot20PM10DailyMean; 
+
+(*Transpose to create pairs*)
+coordsScot20PM10 = Transpose[{Scotdates2020, dailyAvgAllSites20ScotPM10}]; 
+
+(*Creating a temporal data object to be able to graph the dates from the PM average reading*)
+tDSS20PM10 = TemporalData[coordsScot20PM10] (*tDSE20PM10 = Temporal dataset Scotland 2020 PM10*)
+
+(*Setting up the Temporal Plot to visualise the trend*)
+tDLPS2020PM10 = DateListPlot[tDSS20PM10, Frame->False, AxesLabel->{"Month", "PM 10 (ugm-3)"},PlotLabel->Style["Daily Average PM10 Reading in Scotland for year 2020" , Bold], AspectRatio->1/2] 
+
+(*tDLPE2020PM10 = Temporal DateListPlot Scotland 2020 PM 10*)
+
+(*Temporal visualisation to describe the Daily Average PM 2.5 Reading across all sites in Scotland in 2020*)
+
+(*Daily reading for each site per day*)
+allSitesScot20PM25 = Transpose@scot20PM25DailyMean  
+
+(*Average value for every day across all sites*)
+dailyAvgAllSites20ScotPM25= Mean @ scot20PM25DailyMean;
+
+(*Transpose to create pairs*)
+coordsScot20PM25 = Transpose[{Scotdates2020, dailyAvgAllSites20ScotPM25}]; 
+
+(*Creating a temporal data object to be able to graph the dates from the PM average reading*)
+tDSS20PM25 = TemporalData[coordsScot20PM25]
+
+(*Setting up the Temporal Plot to visualise the trend*)
+tDLPS2020PM25 = DateListPlot[tDSS20PM25, Frame->False, AxesLabel->{"Month", "PM 2.5 (ugm-3)"},PlotLabel->Style["Daily Average PM2.5 Reading in Scotland for year 2020" , Bold], AspectRatio->1/2] 
+
+(*Visual to inspect the Daily Average of PM Values for a Specific Site in Scotland*)
+
+(*Defining site names, will be useful in the manipulate*)
+sitesScotland = scot20PM25dailyMeanTable[[2;;,1]] 
+
+(*Confirm the dimensions match the number of sites*)
+sitesScotland // Dimensions
+
+(*Creating an association to choose row number from the site names in the Manipulate*)
+siteMappingScot =Thread@Rule[Range[10], sitesScotland] 
+
+(*Takes a ListLinePlot for either 2019 or 2020, PM10 or PM2.5 for any monitoring station in scotland and outputs a visual of the daily average PM value*)
+Manipulate[ListLinePlot[Transpose[ToExpression@("scot"<>Year<>"PM"<>ToString@pmVal<>"DailyMean")][[;;,Site]],PlotRange->All, 
+    AxesLabel->{"Day Number", "PM "<>If[ToExpression[pmVal] == 25, ToString[N@ToExpression@pmVal/10] <>" (ugm-3)", pmVal <> "(ugm-3)"]}, AspectRatio->1/2, PlotStyle->Automatic, 
+    PlotLegends->{StringJoin["Average PM10 20",Year ]},
+    PlotLabel->"Reading For: "<>siteMappingScot[[Site,2]] <> " PM " <> If[ToExpression[pmVal] == 25, ToString[N@ToExpression@pmVal/10],pmVal]], {Site, siteMappingScot},\[IndentingNewLine]{Year,{"19","20"}}, {pmVal, {"25","10"}}]
+
+(*Comparing Scotland Sites' PM Readings in 2019 and 2020*)
+
+(*Recall the Site Mapping for Scotland*)
+siteMappingScot
+
+(*This is similar to the above manipulation but this now compares the average daily PM 10 or PM 2.5 in both 2019 and 2020, so you can see if the trends differ more visually*)
+Manipulate[
+    Show[
+        ListLinePlot[Transpose[ToExpression@("scot19PM"<>ToString@PM<>"DailyMean")][[;;,Site]],PlotRange->All, AxesLabel->{"Day Number", "PM "<>If[ToExpression[PM] == 25, ToString[N@ToExpression@PM/10]<>"(ugm-3)", PM <> "(ugm-3)"]}, AspectRatio->1/2, PlotLegends->{"Average PM10 2019"},PlotLabel->"Reading Comparison For: "<>siteMappingScot[[Site,2]]<> " PM " <> If[ToExpression[PM] == 25, ToString[N@ToExpression@PM/10], PM],PlotStyle->Hue[1/3], ImageSize->Automatic],
+
+        ListLinePlot[Transpose[ToExpression@("scot20PM"<>ToString@PM<>"DailyMean")][[;;,Site]],PlotRange->All, AxesLabel->{"Day Number", "PM "<>If[ToExpression[PM] == 25, ToString[N@ToExpression@PM/10]<>" (ugm-3)", PM <> "(ugm-3)"]}, AspectRatio->1/2, PlotLegends->{"Average PM10 2020"},PlotLabel->"Reading Comparison For: "<>siteMappingScot[[Site,2]]<> " PM " <> If[ToExpression[PM] == 25, ToString[N@ToExpression@PM/10], PM]], PlotStyle->Automatic, ImageSize->Automatic, PlotStyle->Automatic],
+
+{Site, siteMappingScot},{PM,{"25","10"}}]
+
+(*Overlay Graphing for Scotland*)
+
+(*Overlay of PM10  Measurements in Scotland in the year 2019 and 2020*)
+
+(*In this section we will be graphing the average PM10 and PM2.5 for all the sites in Scotland in 2019 and 2020. then we will overlay them in a graph to visualise the differences between the years*)
+(*Start by taking the yearly average of each site in Scotland for PM10 in 2019*)
+g=scot19holdValue;
+pts=QuantityMagnitude/@g[[1]][[;;,1;;2]][[2;;]];(*get the latitude and longitude of all sites*)
+pts2=g[[1]][[;;,3]][[2;;]];(*get the site names*)
+pts3=Thread@Join[pts//Transpose,List[pts2]];(*Join the two tables*)
+
+scot19PM10DailyMean//Dimensions;
+yearlyScot19PM10dat=Mean/@scot19PM10DailyMean;(*Compute the yearly mean for Scotland PM10 in 2019*)
+pts3;
+scot19PM10YearlyMean=Thread@Join[pts3//Transpose,List[yearlyScot19PM10dat]];(*Join tab3(lat, long, site names) and the yearly mean in one table*)
+scot19PM10YearlyMean[[1;;,4]]; (*get only the yearly mean column to plot a graph*)
+graphScotPM1019=ListLinePlot[scot19PM10YearlyMean[[1;;,4]],PlotStyle->Green,Filling->Bottom, AxesLabel->{"Sites","PM10 (ugm-3)"},PlotRange->{{0,10},{0,18}},PlotLegends->{"2019"},PlotMarkers->{Automatic, 5}];
+
+(*these options of the function ListLinePlot allow to add a legend, fill the area below the graph and specify the range to show*)
+
+(*Similarly take  the yearly average of each site in Scotland for PM10 in 2020*)
+scot20PM10DailyMean//Dimensions;
+yearlyScot20PM10dat=Mean/@scot20PM10DailyMean;
+pts3;
+scot20PM10YearlyMean=Thread@Join[pts3//Transpose,List[yearlyScot20PM10dat]];
+scot20PM10YearlyMean[[1;;,4]];
+graphScotPM1020=ListLinePlot[scot20PM10YearlyMean[[1;;,4]],PlotStyle->Blue,Filling->Bottom, AxesLabel->{"Sites","PM10 (ugm-3)"},PlotRange->{{0,10},{0,18}},PlotLegends->{"2020"},PlotMarkers->{Automatic, 5}];
+
+Show[graphScotPM1019,graphScotPM1020, PlotLabel->Style["Annual Mean Concentration for PM10 in Scotland", Bold]]
+
+(*Overlay of PM2.5  Measurements in Scotland in the year 2019 and 2020*)
+
+(*This section follows the same structure as before, but uses the variable for PM2.5 instead of PM10*)
+scot19PM25DailyMean//Dimensions;
+yearlyScot19PM25dat=Mean/@scot19PM25DailyMean;
+pts3;
+scot19PM25YearlyMean=Thread@Join[pts3//Transpose,List[yearlyScot19PM25dat]];
+scot19PM25YearlyMean[[1;;,4]];
+graphScotPM2519=ListLinePlot[scot19PM25YearlyMean[[1;;,4]],PlotStyle->Green,Filling->Bottom, AxesLabel->{"Sites","PM2.5 (ugm-3)"},PlotRange->{{0,10},{0,18}},PlotLegends->{"2019"},PlotMarkers->{Automatic, 5}];
+
+scot20PM25DailyMean//Dimensions;
+yearlyScot20PM25dat=Mean/@scot20PM25DailyMean;
+pts3;
+scot19PM25YearlyMean=Thread@Join[pts3//Transpose,List[yearlyScot20PM25dat]];
+scot19PM25YearlyMean[[1;;,4]];
+graphScotPM2520=ListLinePlot[scot19PM25YearlyMean[[1;;,4]],PlotStyle->Blue,Filling->Bottom, AxesLabel->{"Sites","PM2.5 (ugm-3)"},PlotRange->{{0,10},{0,18}},PlotLegends->{"2020"},PlotMarkers->{Automatic, 5}];
+
+Show[graphScotPM2519, graphScotPM2520,PlotLabel->Style["Annual Mean Concentration for PM2.5 in Scotland", Bold]]
+
+(*Ridgeline Graph for all sites in Scotland*)
+
+(*Ridgeline graphs are tools to simultaneously visualise the probability distribution function of several datasets. In this case we are able to visualise the distribution of PM in Scotland sites*)
+
+(*PM10 - Ridgeline Graph for Scotland 2019*)
+
+tableScot19PM10=Table[{Min[scot19PM10DailyMean[[i]]],Mean[scot19PM10DailyMean[[i]]],Max[scot19PM10DailyMean[[i]]], StandardDeviation[scot19PM10DailyMean[[i]]]},{i,1,10}]//N;(*find the minimum, mean, max and standard deviation value for each site in the year 2019*)
+head2={{scot19sites[[2;;]]},{"Minimum","Mean", "Maximum", "Standard Deviation"}};
+
+(*now we organise all entries into the same table*)
+maxScot19PM10=Max[tableScot19PM10[[1;;,2]]];(*find largest mean value in the table*)
+minScot19PM10=Min[tableScot19PM10[[1;;,2]]];(*find smallest  mean value in the table*)
+colorRuleMax=Table[n+1->If[tableScot19PM10[[n,2]]==maxScot19PM10,Orange],{n,1,10}];(*colour the largest number in red*)
+colorRuleMin=Table[n+1->If[tableScot19PM10[[n,2]]==minScot19PM10,Green],{n,1,10}];(*colour the smallest number in green*)
+
+List[Grid[Join[Transpose[{Join[{""},head2[[1]]//Transpose]}],Join[head2[[{2}]],tableScot19PM10],2],Frame->All,Background->{None,colorRuleMin}],Grid[Join[Transpose[{Join[{""},head2[[1]]//Transpose]}],Join[head2[[{2}]],tableScot19PM10],2],Frame->All,Background->{None,colorRuleMax}]](*show the table with values of each site*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableScot19PM10[[i,2]],tableScot19PM10[[i,4]]],x],{i,1,10},{x,-10,30}],PlotRange->All,PlotLegends->{"Probability Distributions for PM10 mean concentrations in all Scotland sites (2019)"},Filling->Bottom,AspectRatio->Full] (*graph the probability distributions for all sites in 2019.*)
+
+(*PM2.5 - Ridgeline Graph for Scotland 2019*)
+
+(*This section follows the same structure as before, but uses the variable for PM2.5 instead of PM10*)
+tableScot19PM25=Table[{Min[scot19PM25DailyMean[[i]]],Mean[scot19PM25DailyMean[[i]]],Max[scot19PM25DailyMean[[i]]], StandardDeviation[scot19PM25DailyMean[[i]]]},{i,1,10}]//N;(*find the minimum, mean, max and standard deviation value for each site in the year 2019*)
+
+(*now we organise all entries into the same table*)
+maxScot19PM25=Max[tableScot19PM25[[1;;,2]]];(*find largest mean value in the table*)
+minScot19PM25=Min[tableScot19PM25[[1;;,2]]];(*find smallest  mean value in the table*)
+colorRuleMax=Table[n+1->If[tableScot19PM25[[n,2]]==maxScot19PM25,Orange],{n,1,10}];(*colour the largest number in red*)
+colorRuleMin=Table[n+1->If[tableScot19PM25[[n,2]]==minScot19PM25,Green],{n,1,10}];(*colour the smallest number in green*)
+
+List[Grid[Join[Transpose[{Join[{""},head2[[1]]//Transpose]}],Join[head2[[{2}]],tableScot19PM25],2],Frame->All,Background->{None,colorRuleMin}],Grid[Join[Transpose[{Join[{""},head2[[1]]//Transpose]}],Join[head2[[{2}]],tableScot19PM25],2],Frame->All,Background->{None,colorRuleMax}]](*show the table with values of each site*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableScot19PM25[[i,2]],tableScot19PM25[[i,4]]],x],{i,1,10},{x,-10,30}],PlotRange->All,PlotLegends->{"Probability Distributions for PM2.5 mean concentrations in all Scotland sites (2019)"},Filling->Bottom,AspectRatio->Full](*graph the probability distributions for all sites in 2019.*)
+
+(*PM10 - Ridgeline Graph for Scotland 2020*)
+
+(*This section follows the same structure as before, but for PM10 2020*)
+tableScot20PM10=Table[{Min[scot20PM10DailyMean[[i]]],Mean[scot20PM10DailyMean[[i]]],Max[scot20PM10DailyMean[[i]]], StandardDeviation[scot20PM10DailyMean[[i]]]},{i,1,10}]//N;(*find the minimum, mean, max and standard deviation value for each site in the year 2020*)
+
+(*now we organise all entries into the same table*)
+maxScot20PM10=Max[tableScot20PM10[[1;;,2]]];(*find largest mean value in the table*)
+minScot20PM10=Min[tableScot20PM10[[1;;,2]]];(*find smallest  mean value in the table*)
+colorRuleMax=Table[n+1->If[tableScot20PM10[[n,2]]==maxScot20PM10,Orange],{n,1,10}];(*colour the largest number in red*)
+colorRuleMin=Table[n+1->If[tableScot20PM10[[n,2]]==minScot20PM10,Green],{n,1,10}];(*colour the smallest number in green*)
+
+List[Grid[Join[Transpose[{Join[{""},head2[[1]]//Transpose]}],Join[head2[[{2}]],tableScot20PM10],2],Frame->All,Background->{None,colorRuleMin}],Grid[Join[Transpose[{Join[{""},head2[[1]]//Transpose]}],Join[head2[[{2}]],tableScot20PM10],2],Frame->All,Background->{None,colorRuleMax}]](*show the table with values of each site*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableScot20PM10[[i,2]],tableScot20PM10[[i,4]]],x],{i,1,10},{x,-10,30}],PlotRange->All,PlotLegends->{"Probability Distributions for PM10 mean concentrations in all Scotland sites (2020)"},Filling->Bottom,AspectRatio->Full](*graph the probability distributions for all sites in 2019.*)
+
+(*PM2.5 - Ridgeline Graph for Scotland 2020*)
+
+(*This section follows the same structure as before, but uses the variable for PM2.5 instead of PM10*)
+tableScot20PM25=Table[{Min[scot20PM25DailyMean[[i]]],Mean[scot20PM25DailyMean[[i]]],Max[scot20PM25DailyMean[[i]]], StandardDeviation[scot20PM25DailyMean[[i]]]},{i,1,10}]//N;(*find the minimum, mean, max and standard deviation value for each site in the year 2020*)
+
+(*now we organise all entries into the same table*)
+maxScot20PM25=Max[tableScot20PM25[[1;;,2]]];(*find largest mean value in the table*)
+minScot20PM25=Min[tableScot20PM25[[1;;,2]]];(*find smallest  mean value in the table*)
+colorRuleMax=Table[n+1->If[tableScot20PM25[[n,2]]==maxScot20PM25,Orange],{n,1,10}];(*colour the largest number in red*)
+colorRuleMin=Table[n+1->If[tableScot20PM25[[n,2]]==minScot20PM25,Green],{n,1,10}];(*colour the smallest number in green*)
+
+List[Grid[Join[Transpose[{Join[{""},head2[[1]]//Transpose]}],Join[head2[[{2}]],tableScot20PM25],2],Frame->All,Background->{None,colorRuleMin}],Grid[Join[Transpose[{Join[{""},head2[[1]]//Transpose]}],Join[head2[[{2}]],tableScot20PM25],2],Frame->All,Background->{None,colorRuleMax}]](*show the table with values of each site*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableScot20PM25[[i,2]],tableScot20PM25[[i,4]]],x],{i,1,10},{x,-10,30}],PlotRange->All,PlotLegends->{"Probability Distributions for PM2.5 mean concentrations in all Scotland sites (2020)"},Filling->Bottom,AspectRatio->Full](*graph the probability distributions for all sites in 2019.*)
+
+(*Daily average PM value for the entire of Scotland in 2019 and 2020*)
+
+dailyavg2019pm10Scot = Mean@tableScot19PM10[[1;;10,2]] (*Average for all of scotland PM10 value in 2019*)
+dailyavg2019pm25Scot = Mean@tableScot19PM25[[1;;10,2]] (*Average for all of scotland PM2.5 value in 2019*)
+dailyavg2020pm10Scot = Mean@tableScot20PM10[[1;;10,2]] (*Average for all of scotland PM10 value in 2020*)
+dailyavg2020pm10Scot = Mean@tableScot20PM25[[1;;10,2]] (*Average for all of scotland PM2.5 value in 2020*)
