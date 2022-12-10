@@ -1,0 +1,390 @@
+(*Scotland Particulate Matter Daily Mean Concentration*)
+
+NotebookDirectory[]
+SetDirectory[FileNameJoin[{NotebookDirectory[],"DataDir"}]]
+
+(*Import the list of Scotland Sites to be used for our analysis. We will only use sites that have a complete dataset for PM10 and PM2.5, as well as values for 2019 and 2020*)
+
+(*This variable can be used for both 2019 and 2020 so does not need a year indicator*)
+scotSites=Import["filtered.xlsx",{"Sheets","Sheet1"}];
+
+(*Take the Intersection of the sites listed in Column 3 (2020) and the sites listed in Column 4 (2019) in order to determine which sites appear in both years*)
+intersectingScotSites =Intersection[scotSites[[All,3]],scotSites[[All,4]]]
+
+(*Determine the number of sites that will be included in our dataset for Scotland by using Length*)
+intersectingScotSites//Length
+
+(*Scotland Particulate Matter Mean Concentration for 2019*)
+
+(*Import Scotland Sites 2019 Excel*)
+
+(*When importing this spreadsheet, remove the first 3 and last 4 rows*)
+scot19= Import["Scotland Sites 2019.xlsx",{"Data",1,4;;-5}];
+
+(*Determine the dimensions of our spreadsheet*)
+scot19 //Dimensions
+
+(*Transpose the values of the spreadsheet, so the site names are listed in one single column and the date is listed in rows*)
+scot19trans=scot19//Transpose;
+
+(*Reconfirm the dimensions after performing the transpose*)
+scot19trans//Dimensions
+
+(*Request a small snippet of the dataset in Grid form to ensure this is how we want the data to look after the Transpose*)
+scot19trans[[1;;6,1;;5]]//Grid
+
+(*Reconfirm the length of the variable*)
+Length[scot19trans[[2]]]
+
+(*Remove the Status Rows*)
+
+(*Retrieve the positions for Scotland sites which contain data for PM10*)
+scot19PM10=Position[scot19trans,"PM10 particulate matter (Hourly measured)"]
+
+(*Transpose the data in order to have all of the rows together and all of the columns together*)
+scot19PM10trans=scot19PM10//Transpose
+
+(*Request the positions for the rows only*)
+scot19PM10trans[[1]]
+
+(*Confirm the length of the rows - this should match the number of sites*)
+Length[scot19PM10trans[[1]]]
+
+(*Repeat the same steps above to retrieve the positions for Scotland sites which contain data for PM2.5*)
+scot19PM25=Position[scot19trans,"PM2.5 particulate matter (Hourly measured)"]
+
+(*Transpose the data in order to have all of the rows together and all of the columns together*)
+scot19PM25trans = scot19PM25//Transpose
+
+(*Request the positions for the rows only*)
+scot19PM25trans[[1]]
+
+(*Confirm the length of the rows - this should match the number of sites*)
+Length[scot19PM25trans[[1]]]
+
+(*Join the positions for the PM2.5 and PM10 rows. Sorting them will ensure they are ordered by Site*)
+pmAllscot19=Join[scot19PM10trans[[1]],scot19PM25trans[[1]]]//Sort
+
+(*Join the Date/Time data with the site and pollutant information and store in a new variable*)
+scotland19nostatus=Join[scot19trans[[1;;2]],scot19trans[[pmAllscot19]]]
+
+(*Confirm the dimensions of new variable*)
+scotland19nostatus//Dimensions
+
+(*Check a small output of our new variable in Grid form*)
+scotland19nostatus[[1;;10,1;;5]]//Grid
+
+(*Turn Hourly Measurements into Daily Values by Averaging Results*)
+
+scot19Clean= scotland19nostatus;
+
+(*- Get the means of everything (not separate into PM)*)
+
+(*Calculate the mean of everything for 2019 - NOT separate by PM*)
+scot19dat = scot19Clean[[3;;,3;;]]//Transpose
+
+(*Checking the result for one site*)
+scot19dat[[1;;,1]];
+
+(*Partition the defined variable by 24 so we can calculate the mean per day*)
+scot19part=N@(Mean/@(Partition[scot19dat,24]));
+
+(*Reconfirm the dimensions for the variable*)
+Dimensions[scot19part]
+
+(*Transpose the variable*)
+scot19part=scot19part//Transpose
+
+(*Reconfirm the dimensions*)
+scot19part//Dimensions
+scot19part[[1]];
+
+(*Remove any cells where there is "No data" listed and calculate the daily mean*)
+scot19DailyMean=scot19part/.("No data":>0)
+
+(*Calculate the number of days that sites do not contain any data. Ensure that each site has a minimum of 180 days of data*)
+0/.(Counts/@scot19DailyMean)
+
+(*The dimensions should be the total number of sites times two because this daily Mean is for PM10 and PM2.5*)
+Dimensions[scot19DailyMean]
+
+(*PM10 at Scotland Sites in 2019*)
+
+(*Calculating the Mean of PM10 Only*)
+
+(*Retrieve the positions for Scotland sites which contain data for PM10 and Transpose the data so it is separated into rows and columns*)
+CleanedScot19PM10Rows = Position[scot19Clean,"PM10 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+CleanedScot19PM10Rows[[1]]
+scot19PM10dat=scot19Clean[[CleanedScot19PM10Rows[[1]],3;;]]//Transpose;
+
+(*Reconfirm the dimensions*)
+Dimensions[scot19PM10dat]
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+scot19PM10part=N@(Mean/@(Partition[scot19PM10dat,24]))
+
+(*Reconfirm the dimenstions to ensure we have the appropriate number of means to sites*)
+Dimensions[scot19PM10part]
+
+(*Transpose the data and set the variable to itself*)
+scot19PM10part=scot19PM10part//Transpose
+
+(*Reconfirm the dimensions after the transpose*)
+scot19PM10part//Dimensions
+
+(*Replace any cells containing 'No data' with 0*)
+scot19PM10DailyMean=scot19PM10part/.("No data":>0);
+
+(*Confirm the dimensions have not changed*)
+scot19PM10DailyMean//Dimensions
+
+(*- Visualise all PM data from 2019 for Scotland in a table*)
+
+(*Exclude the heading labels from scot19Clean*)
+scotland19CleanTEMP = scot19Clean[[3;;,1;;2]];
+
+(*Join the site names and PM types columns WITH the daily mean values*)
+scot19joinedTab=Partition[Flatten@Table[{scotland19CleanTEMP[[row,1;;2]],scot19DailyMean[[row]]},{row,1,Length[scot19DailyMean]}],367];
+
+(*Confirm the dimensions of the new variable*)
+scot19joinedTab//Dimensions
+
+(*Create a new heading labels {Site, Particulate Matter, 365 Dates *)
+scot19dateObject=scot19Clean[[1,3;;]]//DeleteDuplicates;
+
+(*Confirm the dimensions for the datObject variable reflects the number of days in the year*)
+scot19dateObject//Dimensions
+
+(*Create a heading with Site and Particulate Matter*)
+heading={"Site","Particulate Matter"};
+
+(*Join the previously created heading with the dateObject*)
+scot19heading=Join[heading,scot19dateObject];
+
+(*Confirm the length of the new heading*)
+scot19heading//Length
+
+(*Join the two tables that were previously created - scot19JoinedTab and scot19heading*)
+scot19dailyMeanTable=Prepend[scot19joinedTab,scot19heading];
+
+(*Confirm the dimensions for the final table*)
+scot19dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+scot19dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table*)
+Export["Scotland 19 Particulate Matter (Both) - Daily Mean Concentration.xlsx",scot19dailyMeanTable]
+
+(*- Get the means of just PM10 at Scotland Sites in 2019*)
+
+(*Retrieve the positions for Scotland sites which contain data for PM10 and Transpose the data so it is separated into rows and columns*)
+CleanedScot19PM10Rows = Position[scot19Clean,"PM10 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+CleanedScot19PM10Rows[[1]]
+scot19PM10dat=scot19Clean[[CleanedScot19PM10Rows[[1]],3;;]]//Transpose;
+
+(*Reconfirm the dimensions*)
+scot19PM10dat//Dimensions
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+scot19PM10part=N@(Mean/@(Partition[scot19PM10dat,24]))
+
+(*Calculate the dimensions for the daily mean - it should be the number of days in a year by number of sites*)
+scot19PM10part//Dimensions
+
+(*Transpose the data and set the variable to itself*)
+scot19PM10part=scot19PM10part//Transpose;
+
+(*Reconfirm the dimensions after the transpose*)
+scot19PM10part//Dimensions
+
+(*Replace any cells containing 'No data' with 0 *)
+scot19PM10DailyMean=scot19PM10part/.("No data":>0);
+
+(*Confirm the dimensions have not changed*)
+scot19PM10DailyMean//Dimensions
+
+(*- Visualise Scotland data for PM10 from 2019 in a table*)
+
+(*Excluding the heading labels from scot19Clean, join the site names and PM types columns WITH the daily mean values*)
+(*Retrieve only the PM10 rows with only the site and PM type columns*)
+scotland19CleanPM10TEMP=scot19Clean[[CleanedScot19PM10Rows[[1]],1;;2]];
+
+(*Join the previously created heading for PM10 with the dateObject*)
+scot19PM10joinedTab=Partition[Flatten@Table[{scotland19CleanPM10TEMP[[row,1;;2]],scot19PM10DailyMean[[row]]},{row,1,Length[scot19PM10DailyMean]}],367];
+
+(*Confirm the length of the new heading*)
+scot19PM10joinedTab//Dimensions
+
+(*Join the two tables that were previously created - scot19PM10joinedTab and scot19heading*)
+scot19PM10dailyMeanTable=Prepend[scot19PM10joinedTab,scot19heading];
+
+(*Confirm the dimensions for the final Daily Mean Table for PM10 from 2019*)
+scot19PM10dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+scot19PM10dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table for PM10 in 2019*)
+Export["Scotland 19 Particulate Matter (PM10) - Daily Mean Concentration.xlsx",scot19PM10dailyMeanTable]
+
+(*- Get the mean of just PM2.5 at Scotland Sites in 2019*)
+
+(*Retrieve the positions for Scotland sites which contain data for PM2.5 from 2019 and Transpose the data so it is separated into rows and columns*)
+CleanedScot19PM25Rows=Position[scot19Clean,"PM2.5 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+CleanedScot19PM25Rows[[1]]
+scot19PM25dat=scot19Clean[[CleanedScot19PM25Rows[[1]],3;;]]//Transpose;
+
+(*Reconfirm the dimensions*)
+scot19PM25dat//Dimensions
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+scot19PM25part=N@(Mean/@(Partition[scot19PM25dat,24]))
+
+(*Reconfirm the dimensions to ensure we have the appropriate number of means to sites*)
+scot19PM25part//Dimensions
+
+(*Transpose the variable and set it equal to itself*)
+scot19PM25part=scot19PM25part//Transpose;
+
+(*Check the dimensions after the transpose to confirm the transpose was successful*)
+scot19PM25part//Dimensions
+
+(*Replace any cells that contain the value No data with 0*)
+scot19PM25DailyMean=scot19PM25part/.("No data":>0);
+
+(*Reconfirm the dimensions*)
+scot19PM25DailyMean//Dimensions
+
+(*- Visualise Scotland data for PM2.5 from 2019 in a table*)
+
+(*1. Excluding the heading labels from scot19Clean, join the site names and PM types columns WITH the daily mean values*)
+(*NOTE! Here we use PM10 rows because site names are in the same row as PM10 values in the original table*)
+scot19PM25col1=scot19Clean[[CleanedScot19PM10Rows[[1]],1]];
+
+(*Here we only get the PM2.5 columns*)
+scot19PM25col2=scot19Clean[[CleanedScot19PM25Rows[[1]],2]];
+
+(*Join the two newly created columns with the Daily Mean*)
+scotland19CleanPM25TEMP=Partition[Flatten@Table[{scot19PM25col1[[row2]],scot19PM25col2[[row2]]},{row2,1,Length[scot19PM25col1]}],2];
+scot19PM25joinedTab=Partition[Flatten@Table[{scotland19CleanPM25TEMP[[row,1;;2]],scot19PM25DailyMean[[row]]},{row,1,Length[scot19PM25DailyMean]}],367];
+
+(*Confirm the length of the new heading*)
+scot19PM25joinedTab//Dimensions
+
+(*Join the two tables that were previously created - scot19PM25joinedTab and scot19heading*)
+scot19PM25dailyMeanTable=Prepend[scot19PM25joinedTab,scot19heading];
+
+(*Confirm the dimensions for the final Daily Mean Table for PM2.5 from 2019*)
+scot19PM25dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+scot19PM25dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table for PM2.5 in 2019*)
+Export["Scotland 19 Particulate Matter (PM2.5) - Daily Mean Concentration.xlsx",scot19PM25dailyMeanTable]
+
+(*Find latitude, longitude, region and environment type*)
+
+(*- Get geolocations of each sites*)
+
+(*First, check the dimensions of the full 2019 clean dataset*)
+scot19Clean//Dimensions
+
+(*Retrieve the Site Names for all of the sites being compared in Scotland*)
+scot19sitenames=scot19Clean[[CleanedScot19PM10Rows[[1]],1]]
+
+(*Check the length of the site names to ensure it matches the number of sites we have been analysing*)
+scot19sitenames//Length
+
+(*Find the geolocation for each site*)
+scotland19geo=FindGeoLocation/@scot19sitenames
+
+(*Determine the Head of the missing expressions*)
+scotland19geo[[2]]//Head
+
+(*Using this detail, find the position of all sites that do not have a GeoLocation*)
+scot19missingpositions=Position[scotland19geo,Missing]//Transpose
+
+(*Pull the first value from the variable scot19missingpositions in order to determine the positions of sites with the missing variable*)
+scot19missingpositions[[1]]
+
+(*Using ReplacePart, update the GeoPosition for all sites that did not previously have coordinates listed*)
+scot19cleanedgeo=ReplacePart[scotland19geo,{2->GeoPosition[{57.144555,-2.106472}]}]
+
+(*Convert the GeoPosition to LatitudeLongitude for all sites*)
+scot19latlong=LatitudeLongitude/@scot19cleanedgeo
+
+(*- Add Latitude and Longitude to the table*)
+
+(*Transpose the Latitude/Longitude, so each value will be in a separate column*)
+scot19latlongTrans=Transpose[scot19latlong]
+
+(*Confirm the dimensions for the first list (latitude) in the new transposed variable*)
+scot19latlongTrans[[1]]//Dimensions
+
+(*Create a heading for the Latitude values. Then, prepend the Latitude values and header to a new variable*)
+heading= Style["Latitude",{Black,Bold,12}];
+scot19latitude=Prepend[scot19latlongTrans[[1]],heading]
+
+(*Confirm the length of the new variable is now all sites plus the header*)
+scot19latitude//Length
+
+(*Confirm the dimensions for the second list (longitude) in the new transposed variable*)
+scot19latlongTrans[[2]]//Dimensions
+
+(*Create a heading for the Longitude values. Then, prepend the Longitude values and header to a new variable*)
+heading2= Style["Longitude",{Black,Bold,12}];
+scot19longitude=Prepend[scot19latlongTrans[[2]],heading2]
+
+(*Confirm the length of the new variable is now all sites plus the header*)
+scot19longitude//Length
+
+(*- Add sites to the table*)
+
+(*Create a heading for the Site values. Then, prepend the site values and header to a new variable*)
+heading3= Style["Site",{Black,Bold,12}];
+scot19sites=Prepend[scot19sitenames,heading3]
+
+(*Confirm the length of the new variable is now all sites plus the header*)
+scot19sites//Dimensions
+
+(*- Add Zones to the table*)
+
+(*Import the AQ Regions Excel sheet to obtain the Zone details*)
+AQZones=Import["AQ_Regions.xlsx",{"Sheets","Closest_Zones"}];
+
+(*Pull the zones for Scotland from this sheet and assign to a new variable*)
+ScotAQZones=AQZones[[2;;11,1]]
+
+(*Confirm the dimensions of this variable is equal to the number of sites*)
+ScotAQZones//Dimensions
+
+(*Create a heading for the Zone values. Then, prepend the zone values and header to a new variable*)
+heading4=Style["Zone",{Black,Bold,12}];
+CompleteScotAQZones=Prepend[ScotAQZones,heading4]
+
+(*- Add Environment Type to the table*)
+
+(*Import the AQ Regions Excel sheet to obtain the Environment details*)
+AQEnvironmentType=Import["AQ_Regions.xlsx",{"Sheets","Closest_Site"}];
+
+(*Pull the Environment Types for Scotland from this sheet and assign to a new variable*)
+ScotAQET=AQEnvironmentType[[2;;11,1]]
+
+(*Confirm the dimensions of this variable is equal to the number of sites*)
+ScotAQET//Dimensions
+
+(*Create a heading for the Environment Type values. Then, prepend the Environment Type values and header to a new variable*)
+heading5=Style["Environment Type",{Black,Bold,12}];
+CompleteScotAQET=Prepend[ScotAQET,heading5]
+
+(*Create a Grid to display the Latitude, Longitude, Site Name, Zone and Environment Type using the variables that were defined in the previous steps*)
+scot19holdValue=Grid[Transpose@Partition[Flatten@Table[{scot19latitude, scot19longitude, scot19sites, CompleteScotAQZones,CompleteScotAQET},1],11], Frame->All]
+
