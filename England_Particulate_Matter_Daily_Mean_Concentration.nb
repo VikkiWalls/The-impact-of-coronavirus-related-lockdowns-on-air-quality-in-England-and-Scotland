@@ -603,3 +603,256 @@ eng20PM25dailyMeanTable[[1;;2,1;;10]]//Grid
 (*Export it into Excel to visualize the entire table for PM2.5 in 2020*)
 Export["England 20 Particulate Matter (PM2.5) - Daily Mean Concentration.xlsx",eng20PM25dailyMeanTable]
 
+(*Graphs*)
+
+(*Temporal visualisation to describe the Daily Average PM10 Reading across all sites in England in 2019*)
+
+Engdates2019 =eng19PM25dailyMeanTable[[1,3;;]]; (*Creates a list of dates*)
+
+(*Dimensions of daily reading for each site per day*)
+allSitesEng19PM10 = Transpose@eng19PM10DailyMean // Dimensions
+
+(*Average value for every day across all sites*)
+dailyAvgAllSites19EngPM10 = Mean @ eng19PM10DailyMean;
+
+(*Transpose to create pairs*)
+coordsEng19PM10 = Transpose[{Engdates2019,dailyAvgAllSites19EngPM10}];
+
+(*Creating a temporal data object to be able to graph the dates from the PM average reading*)
+tDSE19PM10 = TemporalData[coordsEng19PM10]
+
+(*Setting up the Temporal Plot to visualise the trend*)
+tDLPE2019PM10 = DateListPlot[tDSE19PM10, Frame->False, AxesLabel->{"Month", "PM 10 (ugm-3)"},PlotLabel->Style["Daily Average PM10 Reading in England for year 2019" , Bold], AspectRatio->1/2] 
+
+(*Temporal visualisation to describe the Daily Average PM 2.5 Reading across all sites in England in 2019*)
+
+(*Daily reading for each site per day*)
+allSitesEng19PM25 = Transpose@eng19PM25DailyMean;
+
+(*Average value for every day across all sites*)
+dailyAvgAllSites19EngPM25 = Mean@ eng19PM25DailyMean;
+
+(*Transpose to create pairs*)
+coordsEng19PM25 = Transpose[{Engdates2019,dailyAvgAllSites19EngPM25 }];
+
+(*Creating a temporal data object to be able to graph the dates from the PM average reading*)
+tDSE19PM25 = TemporalData[coordsEng19PM25]
+
+(*Setting up the Temporal Plot to visualise the trend*)
+tDLPE2019PM25 = DateListPlot[tDSE19PM25, Frame->False, AxesLabel->{"Month", "PM 2.5 (ugm-3)"},PlotLabel->Style["Daily Average PM2.5 Reading in England for year 2019" , Bold], AspectRatio->1/2] 
+
+(*Temporal visualisation to describe the Daily Average PM10 Reading across all sites in England in 2020*)
+
+Engdates2020 =eng20PM25dailyMeanTable[[1,3;;]]; (*Creates a list of dates*)
+Engdates2020//Dimensions (*As expected*)
+eng20PM10DailyMean  // Dimensions (*Each row is a site with 366 readings, to get the daily reading for all 30 sites, we must transpose*)
+
+(*Daily reading for each site per day*)
+allSitesEng20PM10 = Transpose@eng20PM10DailyMean  
+allSitesEng20PM10 // Dimensions
+
+(*Average value for every day across all sites*)
+dailyAvgAllSites20EngPM10= Mean @ eng20PM10DailyMean;
+
+(*Transpose to create pairs*)
+coordsEng20PM10 = Transpose[{Engdates2020, dailyAvgAllSites20EngPM10}];
+
+(*Creating a temporal data object to be able to graph the dates from the PM average reading*)
+tDSE20PM10 = TemporalData[coordsEng20PM10] (*tDSE20PM10 = Temporal dataset England 2020 PM10*)
+
+(*Setting up the Temporal Plot to visualise the trend*)
+tDLPE2020PM10 = DateListPlot[tDSE20PM10, Frame->False, AxesLabel->{"Month", "PM 10 (ugm-3)"},PlotLabel->Style["Daily Average PM10 Reading in England for year 2020" , Bold], AspectRatio->1/2] 
+
+(*tDLPE2020PM10 = Temporal DateListPlot England 2020 PM 10*)
+
+(*Temporal visualisation to describe the Daily Average PM 2.5 Reading across all sites in England in 2020*)
+
+(*Daily reading for each site per day*)
+allSitesEng20PM25 = (Transpose@eng20PM25DailyMean )
+
+(*Average value for every day across all sites*)
+dailyAvgAllSites20EngPM25= Mean @ eng20PM25DailyMean;
+
+(*Transpose to create pairs*)
+coordsEng20PM25 = Transpose[{Engdates2020, dailyAvgAllSites20EngPM25}];
+
+(*Creating a temporal data object to be able to graph the dates from the PM average reading*)
+tDSE20PM25 = TemporalData[coordsEng20PM25]
+
+(*Setting up the Temporal Plot to visualise the trend*)
+tDLPE2020PM25 = DateListPlot[tDSE20PM25, Frame->False, AxesLabel->{"Month", "PM 2.5 (ugm-3)"},PlotLabel->Style["Daily Average PM2.5 Reading in England for year 2020" , Bold], AspectRatio->1/2] 
+
+(*Visual to Inspect the Daily Average of PM Values for a Specific Site in England *)
+
+(*Defining site names, will be useful in the manipulate*)
+sitesEngland = eng20PM25dailyMeanTable[[2;;,1]] 
+
+(*Confirm the dimensions match the number of sites*)
+sitesEngland // Dimensions
+
+(*Creating an association to choose row number from the site names in the Manipulate*)
+siteMappingEng= Thread@Rule[Range[30],sitesEngland]
+
+(*Manipulate to give the ability to change both year and pm value per site so you can visualise the daily average for a specific site*)
+Manipulate[ListLinePlot[Transpose[ToExpression@("eng"<>Year<>"PM"<>ToString@pmVal<>"DailyMean")][[;;,Site]],PlotRange->All, AxesLabel->{"Day Number", "PM "<>If[ToExpression[pmVal] == 25, ToString[N@ToExpression@pmVal/10]<>" (ugm-3)", pmVal <> "(ugm-3)"]}, AspectRatio->1/2, PlotStyle->Automatic, PlotLegends->{StringJoin["Average PM10 20",Year ]},PlotLabel->"Reading Comparison For: "<>siteMappingEng[[Site,2]]<>" PM "<>If[ToExpression[pmVal] == 25, ToString[N@ToExpression@pmVal/10], pmVal]], {Site, siteMappingEng},{Year,{"19","20"}}, {pmVal, {"25","10"}}]
+
+(*Comparing England Sites' PM readings in 2019 and 2020*)
+
+(*Recall the Site Mapping for England*)
+siteMappingEng
+
+(*The below piece of code encompasses a more dynamic changes,it takes the chosen PM reading and the chosen station and compares that value for both years.It is similar to the one above but now you're able to actually visualize how the trend changes*)
+Manipulate[
+    Show[
+        ListLinePlot[Transpose[ToExpression@("eng19PM"<>ToString@PM<>"DailyMean")][[;;,Site]],PlotRange->All, AxesLabel->{"Day Number", "PM "<>If[ToExpression[PM] == 25, ToString[N@ToExpression@PM/10]<>"(ugm-3)", PM <> "(ugm-3)"]}, AspectRatio->1/2, PlotLegends->{"Average 2019"},PlotLabel->"Reading Comparison For: "<>siteMappingEng[[Site,2]]<> " PM " <>If[ToExpression[PM] == 25, ToString[N@ToExpression@PM/10], PM],PlotStyle->Hue[1/3,1/3], ImageSize->Automatic],
+
+        ListLinePlot[Transpose[ToExpression@("eng20PM"<>ToString@PM<>"DailyMean")][[;;,Site]],PlotRange->All, AxesLabel->{"Day Number", "PM "<>If[ToExpression[PM] == 25, ToString[N@ToExpression@PM/10]<>" (ugm-3)", PM <> "(ugm-3)"]}, AspectRatio->1/2, PlotLegends->{"Average 2020"},PlotLabel->"Reading Comparison For: "<>siteMappingEng[[Site,2]]], PlotStyle->Automatic, ImageSize->Automatic],
+
+        {Site, siteMappingEng},{PM,{"25","10"}}]
+
+(*Overlay Graphing for England*)
+
+(*Overlay of PM10  Measurements in England in the year 2019 and 2020*)
+
+(*In this section we will be graphing the average PM10 and PM2.5 for all the sites in England in 2019 and 2020. then we will overlay them in a graph to visualise the differences between the years*)
+(*Start by taking the yearly average of each site in England for PM10 in 2019*)
+tab=eng19holdValue;
+tab1=QuantityMagnitude/@tab[[1]][[;;,1;;2]][[2;;]];(*get the latitude and longitude of all sites*)
+tab2=tab[[1]][[;;,3]][[2;;]];(*get the site names*)
+tab3=Thread@Join[tab1//Transpose,List[tab2]];(*Join the two tables*)
+
+eng19PM10DailyMean//Dimensions;
+yearlyEng19PM10dat=Mean/@eng19PM10DailyMean; (*Compute the yearly mean for England PM10 in 2019*)
+tab3;
+eng19PM10YearlyMean=Thread@Join[tab3//Transpose,List[yearlyEng19PM10dat]];(*Join tab3(lat, long, site names) and the yearly mean in one table*)
+eng19PM10YearlyMean[[1;;,4]]; (*get only the yearly mean column to plot a graph*)
+graphEngPM1019=ListLinePlot[eng19PM10YearlyMean[[1;;,4]],PlotStyle->Green,Filling->Bottom, AxesLabel->{"Sites","PM10 (ugm-3)"},PlotLegends->{"2019"},PlotMarkers->{Automatic, 5}];
+
+(*these options of the function ListLinePlot allow to add a legend, fill the area below the graph and specify the range to show*)
+(*Similarly take  the yearly average of each site in England for PM10 in 2020*)
+eng20PM10DailyMean//Dimensions;
+yearlyEng20PM10dat=Mean/@eng20PM10DailyMean;
+tab3;
+eng20PM10YearlyMean=Thread@Join[tab3//Transpose,List[yearlyEng20PM10dat]];
+eng20PM10YearlyMean[[1;;,4]];
+graphEngPM1020=ListLinePlot[eng20PM10YearlyMean[[1;;,4]],PlotStyle->Blue,Filling->Bottom, AxesLabel->{"Sites","PM10 (ugm-3)"},PlotLegends->{"2020"},PlotMarkers->{Automatic, 5}];
+
+(*Then present the two graphs overlayed on top of each other with a legend on the side.*)
+Show[graphEngPM1019,graphEngPM1020, PlotLabel->Style["Annual Mean Concentration for PM10 in England", Bold]]
+
+(*Overlay of PM2.5  Measurements in England in the year 2019 and 2020*)
+
+(*This section follows the same structure as before, but uses the variable for PM2.5 instead of PM10*)
+eng19PM25DailyMean//Dimensions;
+yearlyEng19PM25dat=Mean/@eng19PM25DailyMean;
+tab3;
+eng19PM25YearlyMean=Thread@Join[tab3//Transpose,List[yearlyEng19PM25dat]];
+eng19PM25YearlyMean[[1;;,4]];
+graphEngPM2519=ListLinePlot[eng19PM25YearlyMean[[1;;,4]],PlotStyle->Green,Filling->Bottom, AxesLabel->{"Sites","PM2.5 (ugm-3)"},PlotLegends->{"2019"},PlotMarkers->{Automatic, 5}];
+
+eng20PM25DailyMean//Dimensions;
+yearlyEng20PM25dat=Mean/@eng20PM25DailyMean;
+tab3;
+eng20PM25YearlyMean=Thread@Join[tab3//Transpose,List[yearlyEng20PM25dat]];
+eng20PM25YearlyMean[[1;;,4]];
+graphEngPM2520=ListLinePlot[eng20PM25YearlyMean[[1;;,4]],PlotStyle->Blue,Filling->Bottom, AxesLabel->{"Sites","PM2.5 (ugm-3)"},PlotLegends->{"2020"},PlotMarkers->{Automatic, 5}];
+
+Show[graphEngPM2519,graphEngPM2520, PlotLabel->Style["Annual Mean Concentration for PM2.5 in England",Bold]]
+
+(*Ridgeline Graph for largest and smallest PM mean concentrations in England sites*)
+
+(*Ridgeline graphs are tools to simultaneously visualise the probability distribution function of several datasets. In this case we are able to visualise the distribution of PM in England sites*)
+
+(*PM10 - Ridgeline Graph for largest and smallest mean concentrations in England sites (2019) *)
+
+tableEng19PM10=Table[{Min[Select[eng19PM10DailyMean[[i]],#>0&]],Mean[eng19PM10DailyMean[[i]]],Max[eng19PM10DailyMean[[i]]], StandardDeviation[eng19PM10DailyMean[[i]]]},{i,1,30}]//N;(*find the minimum, mean, max and standard deviation value for each site in the year 2019*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng19PM10[[i,2]],tableEng19PM10[[i,4]]],x],{i,1,30},{x,0,10}],PlotRange->All,Filling->Bottom,AspectRatio->Full];(*uses the mean and standard deviation of each site to create a ridgeline graph of all sites*)
+head={{eng19sites[[2;;]]},{"Minimum","Mean", "Maximum", "Standard Deviation"}};
+
+(*now we organise all entries into the same table*)
+maxEng19PM10=Max[tableEng19PM10[[1;;,2]]];(*find largest mean value in the table*)
+minEng19PM10=Min[tableEng19PM10[[1;;,2]]];(*find smallest  mean value in the table*)
+colorRuleMax=Table[n+1->If[tableEng19PM10[[n,2]]==maxEng19PM10,Orange],{n,1,30}];(*colour the largest number in red*)
+colorRuleMin=Table[n+1->If[tableEng19PM10[[n,2]]==minEng19PM10,Green],{n,1,30}];(*colour the smallest number in green*)
+
+List[Grid[Join[Transpose[{Join[{""},head[[1]]//Transpose]}],Join[head[[{2}]],tableEng19PM10],2],Frame->All,Background->{None,colorRuleMin}],Grid[Join[Transpose[{Join[{""},head[[1]]//Transpose]}],Join[head[[{2}]],tableEng19PM10],2],Frame->All,Background->{None,colorRuleMax}]](*show the table with values of each site*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng19PM10[[i,2]],tableEng19PM10[[i,4]]],x],{i,{20,25}},{x,-10,50}],PlotRange->All,PlotLegends->{"Probability Distributions for the largest and smallest PM10 mean concentrations in England sites (2019)"},Filling->Bottom,AspectRatio->Full](*graph the probability distributions for the sites with the largest and smallest PM10 mean in 2019.*)
+
+(*PM2.5 - Ridgeline Graph for largest and smallest mean concentrations in England sites (2019)*)
+
+(*This section follows the same structure as before, but uses the variable for PM2.5 instead of PM10*)
+tableEng19PM25=Table[{Min[Select[eng19PM25DailyMean[[i]],#>0&]],Mean[eng19PM25DailyMean[[i]]],Max[eng19PM25DailyMean[[i]]], StandardDeviation[eng19PM25DailyMean[[i]]]},{i,1,30}]//N;(*find the minimum, mean, max and standard deviation value for each site in the year 2019*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng19PM10[[i,2]],tableEng19PM25[[i,4]]],x],{i,1,30},{x,0,50}],PlotRange->All,Filling->Bottom,AspectRatio->Full];
+head={{eng19sites[[2;;]]},{"Minimum","Mean", "Maximum", "Standard Deviation"}};
+
+(*now we organise all entries into the same table*)
+maxEng19PM25=Max[tableEng19PM25[[1;;,2]]];(*find largest mean value in the table*)
+minEng19PM25=Min[tableEng19PM25[[1;;,2]]];(*find smallest  mean value in the table*)
+colorRuleMax=Table[n+1->If[tableEng19PM25[[n,2]]==maxEng19PM25,Orange],{n,1,30}];(*colour the largest number in red*)
+colorRuleMin=Table[n+1->If[tableEng19PM25[[n,2]]==minEng19PM25,Green],{n,1,30}];(*colour the smallest number in green*)
+
+List[Grid[Join[Transpose[{Join[{""},head[[1]]//Transpose]}],Join[head[[{2}]],tableEng19PM25],2],Frame->All,Background->{None,colorRuleMin}],Grid[Join[Transpose[{Join[{""},head[[1]]//Transpose]}],Join[head[[{2}]],tableEng19PM25],2],Frame->All,Background->{None,colorRuleMax}]](*show the table with values of each site*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng19PM25[[i,2]],tableEng19PM25[[i,4]]],x],{i,{20,25}},{x,-10,50}],PlotRange->All,PlotLegends->{"Probability Distributions for the largest and smallest PM2.5 mean concentrations in England sites (2019)"},Filling->Bottom,AspectRatio->Full](*graph the probability distributions for the sites with the largest and smallest PM2.5 mean in 2019.*)
+
+(*PM10 - Ridgeline Graph for largest and smallest mean concentrations in England sites (2020)*)
+
+(*This section follows the same structure as before, but for PM10 2020*)
+tableEng20PM10=Table[{Min[Select[eng20PM10DailyMean[[i]],#>0&]],Mean[eng20PM10DailyMean[[i]]],Max[eng20PM10DailyMean[[i]]], StandardDeviation[eng20PM10DailyMean[[i]]]},{i,1,30}]//N;(*find the minimum, mean, max and standard deviation value for each site in the year 2020*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng20PM10[[i,2]],tableEng20PM10[[i,4]]],x],{i,1,30},{x,0,50}],PlotRange->All,Filling->Bottom,AspectRatio->Full];
+head={{eng19sites[[2;;]]},{"Minimum","Mean", "Maximum", "Standard Deviation"}};
+
+(*now we organise all entries into the same table*)
+maxEng20PM10=Max[tableEng20PM10[[1;;,2]]];(*find largest mean value in the table*)
+minEng20PM10=Min[tableEng20PM10[[1;;,2]]];(*find smallest  mean value in the table*)
+colorRuleMax=Table[n+1->If[tableEng20PM10[[n,2]]==maxEng20PM10,Orange],{n,1,30}];(*colour the largest number in red*)
+colorRuleMin=Table[n+1->If[tableEng20PM10[[n,2]]==minEng20PM10,Green],{n,1,30}];(*colour the smallest number in green*)
+
+List[Grid[Join[Transpose[{Join[{""},head[[1]]//Transpose]}],Join[head[[{2}]],tableEng20PM10],2],Frame->All,Background->{None,colorRuleMin}],Grid[Join[Transpose[{Join[{""},head[[1]]//Transpose]}],Join[head[[{2}]],tableEng20PM10],2],Frame->All,Background->{None,colorRuleMax}]](*show the table with values of each site*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng20PM10[[i,2]],tableEng20PM10[[i,4]]],x],{i,{20,25}},{x,-10,50}],PlotRange->All,PlotLegends->{"Probability Distributions for the largest and smallest PM10 mean concentrations in England sites (2020)"},Filling->Bottom,AspectRatio->Full](*graph the probability distributions for the sites with the largest and smallest PM10 mean in 2020.*)
+
+(*PM2.5 - Ridgeline Graph for largest and smallest mean concentrations in England sites (2020)*)
+
+(*This section follows the same structure as before, but uses the variable for PM2.5 instead of PM10*)
+tableEng20PM25=Table[{Min[Select[eng20PM25DailyMean[[i]],#>0&]],Mean[eng20PM25DailyMean[[i]]],Max[eng20PM25DailyMean[[i]]], StandardDeviation[eng20PM25DailyMean[[i]]]},{i,1,30}]//N;(*find the minimum, mean, max and standard deviation value for each site in the year 2020*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng20PM25[[i,2]],tableEng20PM25[[i,4]]],x],{i,1,30},{x,0,50}],PlotRange->All,Filling->Bottom,AspectRatio->Full];
+head={{eng19sites[[2;;]]},{"Minimum","Mean", "Maximum", "Standard Deviation"}};
+
+(*now we organise all entries into the same table*)
+maxEng20PM25=Max[tableEng20PM25[[1;;,2]]];(*find largest mean value in the table*)
+minEng20PM25=Min[tableEng20PM25[[1;;,2]]];(*find smallest  mean value in the table*)
+colorRuleMax=Table[n+1->If[tableEng20PM25[[n,2]]==maxEng20PM25,Orange],{n,1,30}];(*colour the largest number in red*)
+colorRuleMin=Table[n+1->If[tableEng20PM25[[n,2]]==minEng20PM25,Green],{n,1,30}];(*colour the smallest number in green*)
+
+List[Grid[Join[Transpose[{Join[{""},head[[1]]//Transpose]}],Join[head[[{2}]],tableEng20PM25],2],Frame->All,Background->{None,colorRuleMin}],Grid[Join[Transpose[{Join[{""},head[[1]]//Transpose]}],Join[head[[{2}]],tableEng20PM25],2],Frame->All,Background->{None,colorRuleMax}]](*show the table with values of each site*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng20PM25[[i,2]],tableEng20PM25[[i,4]]],x],{i,{20,25}},{x,-10,50}],PlotRange->All,PlotLegends->{"Probability Distributions for the largest and smallest PM2.5 mean concentrations in England sites (2020)"},Filling->Bottom,AspectRatio->Full](*graph the probability distributions for the sites with the largest and smallest PM2.5 mean in 2020.*)
+
+(*Ridgeline graph for all sites in England*)
+
+(*Ridgeline graphs are tools to simultaneously visualise the probability distribution function of several datasets. In this case we are able to visualise the distribution of PM in England sites*)
+
+(*PM10 - Ridgeline Graph for All England Sites 2019*)
+
+tableEng19PM10=Table[{Min[eng19PM10DailyMean[[i]]],Mean[eng19PM10DailyMean[[i]]],Max[eng19PM10DailyMean[[i]]], StandardDeviation[eng19PM10DailyMean[[i]]]},{i,1,30}]//N;(*find the minimum, mean, max and standard deviation value for each site for PM10 in the year 2019*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng19PM10[[i,2]],tableEng19PM10[[i,4]]],x],{i,1,30},{x,0,50}],PlotRange->All,PlotLegends->{"Probability Distributions for PM10 mean concentrations in all England sites (2019)"},Filling->Bottom,AspectRatio->Full](*uses the mean and standard deviation of each site to create a ridgeline graph of all sites*)
+
+(*PM2.5 - Ridgeline Graph for All England Sites 2019*)
+
+tableEng19PM25=Table[{Min[eng19PM25DailyMean[[i]]],Mean[eng19PM25DailyMean[[i]]],Max[eng19PM25DailyMean[[i]]], StandardDeviation[eng19PM25DailyMean[[i]]]},{i,1,30}]//N;(*find the minimum, mean, max and standard deviation value for each site for PM2.5 in the year 2019*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng19PM25[[i,2]],tableEng19PM25[[i,4]]],x],{i,1,30},{x,0,50}],PlotRange->All,PlotLegends->{"Probability Distributions for PM2.5 mean concentrations in all England sites (2019)"},Filling->Bottom,AspectRatio->Full](*uses the mean and standard deviation of each site to create a ridgeline graph of all sites*)
+
+(*PM10 - Ridgeline Graph for All England Sites 2020*)
+
+tableEng20PM10=Table[{Min[eng20PM10DailyMean[[i]]],Mean[eng20PM10DailyMean[[i]]],Max[eng20PM10DailyMean[[i]]], StandardDeviation[eng20PM10DailyMean[[i]]]},{i,1,30}]//N;(*find the minimum, mean, max and standard deviation value for each site for PM10 in the year 2020*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng20PM10[[i,2]],tableEng20PM10[[i,4]]],x],{i,1,30},{x,0,50}],PlotRange->All,PlotLegends->{"Probability Distributions for PM10 mean concentrations in all England sites (2020)"},Filling->Bottom,AspectRatio->Full](*uses the mean and standard deviation of each site to create a ridgeline graph of all sites*)
+
+(*PM2.5 - Ridgeline Graph for All England Sites 2020*)
+
+tableEng20PM25=Table[{Min[eng20PM25DailyMean[[i]]],Mean[eng20PM25DailyMean[[i]]],Max[eng20PM25DailyMean[[i]]], StandardDeviation[eng20PM25DailyMean[[i]]]},{i,1,30}]//N;(*find the minimum, mean, max and standard deviation value for each site for PM2.5 in the year 2020*)
+ListLinePlot3D[Table[PDF[NormalDistribution[tableEng20PM25[[i,2]],tableEng20PM25[[i,4]]],x],{i,1,30},{x,0,50}],PlotRange->All,PlotLegends->{"Probability Distributions for PM2.5 mean concentrations in all England sites (2019)"},Filling->Bottom,AspectRatio->Full](*uses the mean and standard deviation of each site to create a ridgeline graph of all sites*)
+
+(*Daily average PM value for the entire of England in 2019 and 2020*)
+
+dailyavg2019pm10 =Mean@tableEng19PM10[[1;;30,2]] (*Daily average PM10 value for England in 2019*)
+dailyavg2019pm25 =Mean@tableEng19PM25[[1;;30,2]] (*Daily average PM2.5 value for England in 2019*)
+dailyavg2020pm10=Mean@tableEng20PM10[[1;;30,2]] (*Daily average PM10 value for England in 2020*)
+dailyavg2020pm25=Mean@tableEng20PM25[[1;;30,2]] (*Daily average PM2.5 value for England in 2020*)
