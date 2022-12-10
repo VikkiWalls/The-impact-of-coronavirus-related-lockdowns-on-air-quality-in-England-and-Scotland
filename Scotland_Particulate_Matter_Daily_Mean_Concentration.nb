@@ -388,3 +388,249 @@ CompleteScotAQET=Prepend[ScotAQET,heading5]
 (*Create a Grid to display the Latitude, Longitude, Site Name, Zone and Environment Type using the variables that were defined in the previous steps*)
 scot19holdValue=Grid[Transpose@Partition[Flatten@Table[{scot19latitude, scot19longitude, scot19sites, CompleteScotAQZones,CompleteScotAQET},1],11], Frame->All]
 
+(*Scotland Particulate Matter Mean Concentration for 2020*)
+
+(*Import Scotland Sites 2020 Excel*)
+
+(*When importing this spreadsheet, remove the first 3 and last 4 rows*)
+scotland20=Import["Scotland Sites 2020.xlsx",{"Data",1,4;;-5}]
+
+(*Determine the dimensions of our spreadsheet*)
+scotland20//Dimensions
+
+(*Transpose the values of the spreadsheet, so the site names are listed in one single column and the date is listed in rows*)
+scotland20trans=scotland20//Transpose
+
+(*Reconfirm the dimensions and length after performing the transpose*)
+scotland20trans//Dimensions
+
+(*Request a small snippet of the dataset in Grid form to ensure this is how we want the data to look after the Transpose*)
+scotland20trans[[1;;6,1;;5]]//Grid
+
+(*Reconfirm the length of the variable*)
+scotland20trans[[2]]//Length
+
+(*Remove "Status" rows.*)
+
+(*Retrieve the positions for Scotland sites which contain data for PM10*)
+scot20PM10=Position[scotland20trans,"PM10 particulate matter (Hourly measured)"]
+
+(*Transpose the data in order to have all of the rows together and all of the columns together*)
+scot20PM10trans=scot20PM10//Transpose
+
+(*Request the positions for the rows only*)
+scot20PM10trans[[1]]
+
+(*Confirm the length of the rows - this should match the number of sites*)
+scot20PM10trans[[1]]//Length
+
+(*Repeat the same steps above to retrieve the positions for Scotland sites which contain data for PM2.5*)
+scot20PM25=Position[scotland20trans,"PM2.5 particulate matter (Hourly measured)"]
+
+(*Transpose the data in order to have all of the rows together and all of the columns together*)
+scot20PM25Trans=scot20PM25//Transpose
+
+(*Request the positions for the rows only*)
+scot20PM25Trans[[1]]
+
+(*Confirm the length of the rows - this should match the number of sites*)
+scot20PM25Trans[[1]]//Length
+
+(*Join the positions for the PM2.5 and PM10 rows. Sorting them will ensure they are ordered by Site*)
+PMAllscot20=Join[scot20PM10trans[[1]],scot20PM25Trans[[1]]]//Sort
+
+(*Join the Date/Time data with the site and pollutant information and store in a new variable*)
+scotland20nostatus=Join[scotland20trans[[1;;2]],scotland20trans[[PMAllscot20]]]
+
+(*Confirm the dimensions of new variable*)
+scotland20nostatus//Dimensions
+
+(*Check a small output of our new variable in Grid form*)
+scotland20nostatus[[1;;10,1;;5]]//Grid
+
+(*Turn Hourly Measurements into Daily Values by Averaging Results*)
+
+scotland20Clean=scotland20nostatus;
+
+(*- Getting the means of everything (not separated into PM)*)
+
+(*Calculate the mean of everything for 2020 - NOT separate by PM*)
+scot20dat=scotland20Clean[[3;;,3;;]]//Transpose
+
+(*Checking the result for one site*)
+scot20dat[[1;;,1]];
+
+(*Partition the defined variable by 24 so we can calculate the mean per day*)
+scot20part=N@(Mean/@(Partition[scot20dat,24]))
+
+(*Reconfirm the dimensions for the variable*)
+scot20part//Dimensions
+
+(*Transpose the variable*)
+scot20part=scot20part//Transpose
+
+(*Reconfirm the dimensions*)
+scot20part//Dimensions
+
+(*Check if there's a missing data*)
+scot20part[[1]];
+
+(*Replace any values that have No date with 0 *)
+scot20DailyMean=scot20part/.("No data":>0)
+
+(*ensure all sites do not have more than 180 days of missing data*)
+0/. (Counts/@scot20DailyMean)
+
+(*Check the dimension of the daily mean data*)
+scot20DailyMean//Dimensions
+
+(*- Visualising all PM data from 2020 for Scotland in a table*)
+
+(*Exclude the heading labels from scotland20Clean*)
+scotland20CleanTEMP=scotland20Clean[[3;;,1;;2]];
+
+(*Join the site names and PM types columns WITH the daily mean values*)
+scot20joinedTab=Partition[Flatten@Table[{scotland20CleanTEMP[[row,1;;2]],scot20DailyMean[[row]]},{row,1,Length[scot20DailyMean]}],368];
+
+(*Confirm the dimensions of the new variable*)
+scot20joinedTab//Dimensions
+
+(*Create a new heading labels {Site, Particulate Matter, 365 Dates *)
+scot20dateObject=scotland20Clean[[1,3;;]]//DeleteDuplicates;
+
+(*Confirm the dimensions for the datObject variable reflects the number of days in the year*)
+scot20dateObject//Dimensions
+
+(*Create a heading with Site and Particulate Matter*)
+heading={"Site","Particulate Matter"};
+
+(*Join the previously created heading with the dateObject*)
+scot20heading=Join[heading,scot20dateObject];
+
+(*Confirm the length of the new heading*)
+scot20heading//Length
+
+(*Join the two tables that were previously created - scot20JoinedTab and scot20heading*)
+scot20dailyMeanTable=Prepend[scot20joinedTab,scot20heading];
+
+(*Confirm the dimensions for the final table*)
+scot20dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+scot20dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table*)
+Export["Scotland 20 Particulate Matter (Both) - Daily Mean Concentration.xlsx",scot20dailyMeanTable]
+
+(*- Getting the means of just PM10 at Scotland Sites in 2020*)
+
+(*Retrieve the positions for Scotland sites which contain data for PM10 and Transpose the data so it is separated into rows and columns*)
+Cleanedscot20PM10Rows=Position[scotland20Clean,"PM10 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+Cleanedscot20PM10Rows[[1]]
+scot20PM10dat=scotland20Clean[[Cleanedscot20PM10Rows[[1]],3;;]]//Transpose;
+
+(*Reconfirm the dimensions*)
+scot20PM10dat//Dimensions
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+scot20PM10part=N@(Mean/@(Partition[scot20PM10dat,24]))
+
+(*Calculate the dimensions for the daily mean - it should be the number of days in a year by number of sites*)
+scot20PM10part//Dimensions
+
+(*Transpose the data and set the variable to itself*)
+scot20PM10part=scot20PM10part//Transpose;
+
+(*Reconfirm the dimensions after the transpose*)
+scot20PM10part//Dimensions
+
+(*Replace any cells containing 'No data' with 0 *)
+scot20PM10DailyMean=scot20PM10part/.("No data":>0);
+
+(*Confirm the dimensions have not changed*)
+scot20PM10DailyMean//Dimensions
+
+(*- Visualising Scotland data for PM10 from 2020 in a table*)
+
+(*1. Excluding the heading labels from scotland20Clean, join the site names and PM types columns WITH the daily mean values*)
+(*Retrieve only the PM10 rows with only the site and PM type columns*)
+scotland20PM10CleanTEMP=scotland20Clean[[Cleanedscot20PM10Rows[[1]],1;;2]];
+
+(*Join the previously created heading for PM10 with the dateObject*)
+scot20PM10joinedTab=Partition[Flatten@Table[{scotland20PM10CleanTEMP[[row,1;;2]],scot20PM10DailyMean[[row]]},{row,1,Length[scot20PM10DailyMean]}],368];
+
+(*Confirm the length of the new heading*)
+scot20PM10joinedTab//Dimensions
+
+(*Join the two tables that were previously created - scot20PM10joinedTab and scot20heading*)
+scot20PM10dailyMeanTable=Prepend[scot20PM10joinedTab,scot20heading];
+
+(*Confirm the dimensions for the final Daily Mean Table for PM10 from 2020*)
+scot20PM10dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+scot20PM10dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table for PM10 in 2020*)
+Export["Scotland 20 Particulate Matter (PM10) - Daily Mean Concentration.xlsx",scot20PM10dailyMeanTable]
+
+(*- Getting the mean of just PM2.5 at Scotland Sites in 2020*)
+
+(*Retrieve the positions for Scotland sites which contain data for PM2.5 from 2020 and Transpose the data so it is separated into rows and columns*)
+Cleanedscot20PM25Rows=Position[scotland20Clean,"PM2.5 particulate matter (Hourly measured)"]//Transpose
+
+(*Request the positions for the rows only*)
+Cleanedscot20PM25Rows[[1]]
+scot20PM25dat=scotland20Clean[[Cleanedscot20PM25Rows[[1]],3;;]]//Transpose;
+
+(*Reconfirm the dimensions*)
+scot20PM25dat//Dimensions
+
+(*Remove any cells that do not have any data and then calculate the daily mean *)
+scot20PM25part=N@(Mean/@(Partition[scot20PM25dat,24]))
+
+(*Reconfirm the dimensions to ensure we have the appropriate number of means to sites*)
+scot20PM25part//Dimensions
+
+(*Transpose the variable and set it equal to itself*)
+scot20PM25part=scot20PM25part//Transpose;
+
+(*Check the dimensions after the transpose to confirm the transpose was successful*)
+scot20PM25part//Dimensions
+
+(*Replace any cells that contain the value No data with 0*)
+scot20PM25DailyMean=scot20PM25part/.("No data":>0);
+
+(*Reconfirm the dimensions*)
+scot20PM25DailyMean//Dimensions
+
+(*- Visualising Scotland data for PM2.5 from 2019 in a table*)
+
+(*1. Excluding the heading labels from scotland20Clean, join the site names and PM types columns WITH the daily mean values*)
+(*NOTE! Here we use PM10 rows because site names are in the same row as PM10 values in the original table*)
+scot20PM25col1=scotland20Clean[[Cleanedscot20PM10Rows[[1]],1]];
+
+(*Here we only get the PM2.5 columns*)
+scot20PM25col2=scotland20Clean[[Cleanedscot20PM25Rows[[1]],2]];
+
+(*Join the two newly created columns with the Daily Mean*)
+scotland20CleanPM25TEMP=Partition[Flatten@Table[{scot20PM25col1[[row2]],scot20PM25col2[[row2]]},{row2,1,Length[scot20PM25col1]}],2];
+scot20PM25joinedTab=Partition[Flatten@Table[{scotland20CleanPM25TEMP[[row,1;;2]],scot20PM25DailyMean[[row]]},{row,1,Length[scot20PM25DailyMean]}],368];
+
+(*Confirm the length of the new heading*)
+scot20PM25joinedTab//Dimensions
+
+(*Join the two tables that were previously created - scot20PM25joinedTab and scot20heading*)
+scot20PM25dailyMeanTable=Prepend[scot20PM25joinedTab,scot20heading];
+
+(*Confirm the dimensions for the final Daily Mean Table for PM2.5 from 2020*)
+scot20PM25dailyMeanTable//Dimensions
+
+(*Check a small output of the new table in Grid form*)
+scot20PM25dailyMeanTable[[1;;2,1;;10]]//Grid
+
+(*Export it into Excel to visualize the entire table for PM2.5 in 2020*)
+Export["Scotland 20 Particulate Matter (PM2.5) - Daily Mean Concentration.xlsx",scot20PM25dailyMeanTable]
+
